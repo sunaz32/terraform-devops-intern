@@ -1,1 +1,3 @@
-variable "vpc_id" {}
+variable "vpc_id" {
+  description = "VPC ID to attach security groups"
+}

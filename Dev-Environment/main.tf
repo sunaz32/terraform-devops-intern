@@ -1,3 +1,7 @@
+provider "aws" {
+  region = var.region
+}
+
 module "vpc" {
   source = "./modules/vpc"
 }
@@ -10,10 +14,10 @@ module "security_group" {
 module "alb" {
   source         = "./modules/alb"
   app_name       = var.app_name
+  alb_domain     = var.alb_domain
   vpc_id         = module.vpc.vpc_id
   public_subnets = module.vpc.public_subnets
   sg_id          = module.security_group.alb_sg
-  alb_domain     = var.alb_domain
 }
 
 module "ecs" {
@@ -26,7 +30,7 @@ module "ecs" {
   desired_count      = var.desired_count
   min_capacity       = var.min_capacity
   max_capacity       = var.max_capacity
-  execution_role_arn = aws_iam_role.ecs_task_execution.arn
-  image_url          = "<your-container-image-url>"
+  execution_role_arn = module.ecs_task_exec_role.arn
+  image_url          = "<your-ecr-image-url>"
   target_group_arn   = module.alb.target_group_arn
 }

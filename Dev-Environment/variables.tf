@@ -1,7 +1,27 @@
-variable "region" {}
-variable "app_name" {}
-variable "cluster_name" {}
-variable "alb_domain" {}
-variable "desired_count" {}
-variable "min_capacity" {}
-variable "max_capacity" {}
+variable "region" {
+  description = "AWS region"
+}
+
+variable "app_name" {
+  description = "Application name"
+}
+
+variable "cluster_name" {
+  description = "ECS cluster name"
+}
+
+variable "alb_domain" {
+  description = "Domain or hostname for the ALB"
+}
+
+variable "desired_count" {
+  description = "Initial ECS service desired count"
+}
+
+variable "min_capacity" {
+  description = "Minimum number of ECS tasks"
+}
+
+variable "max_capacity" {
+  description = "Maximum number of ECS tasks"
+}
