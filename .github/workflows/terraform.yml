@@ -24,14 +24,14 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform -chdir=dev-environment init
+        run: terraform -chdir=Dev-Environment init
 
       - name: Terraform Validate
-        run: terraform -chdir=dev-environment validate
+        run: terraform -chdir=Dev-Environment validate
 
       - name: Terraform Plan
-        run: terraform -chdir=dev-environment plan -out=tfplan
+        run: terraform -chdir=Dev-Environment plan -out=tfplan
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/dev'
-        run: terraform -chdir=dev-environment apply -auto-approve tfplan
+        run: terraform -chdir=Dev-Environment apply -auto-approve tfplan
