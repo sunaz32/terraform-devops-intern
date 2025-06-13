@@ -30,7 +30,6 @@ module "ecs" {
   desired_count      = var.desired_count
   min_capacity       = var.min_capacity
   max_capacity       = var.max_capacity
-  execution_role_arn = module.ecs_task_exec_role.arn
   image_url          = "<your-ecr-image-url>"
   target_group_arn   = module.alb.target_group_arn
 }
