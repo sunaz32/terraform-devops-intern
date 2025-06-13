@@ -25,3 +25,8 @@ variable "min_capacity" {
 variable "max_capacity" {
   description = "Maximum number of ECS tasks"
 }
+
+variable "execution_role_arn" {
+  description = "IAM role ARN for ECS task execution"
+  type        = string
+}
