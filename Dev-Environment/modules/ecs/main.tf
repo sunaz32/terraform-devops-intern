@@ -2,43 +2,23 @@ resource "aws_ecs_cluster" "this" {
   name = var.cluster_name
 }
 
-data "aws_iam_policy_document" "exec_assume" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "ecs_task_execution" {
-  name               = "${var.app_name}-exec-role"
-  assume_role_policy = data.aws_iam_policy_document.exec_assume.json
-}
-
-resource "aws_iam_role_policy_attachment" "exec_policy" {
-  role       = aws_iam_role.ecs_task_execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
 resource "aws_ecs_task_definition" "app" {
   family                   = var.app_name
   requires_compatibilities = ["EC2"]
   network_mode             = "awsvpc"
   cpu                      = "256"
   memory                   = "512"
-  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
+  execution_role_arn       = var.execution_role_arn
 
   container_definitions = jsonencode([
     {
-      name      = var.app_name
-      image     = var.image_url
-      essential = true
+      name      = var.app_name,
+      image     = var.image_url,
+      essential = true,
       portMappings = [
         {
-          containerPort = 80
-          hostPort      = 80
+          containerPort = 80,
+          hostPort      = 80,
           protocol      = "tcp"
         }
       ]
@@ -50,8 +30,8 @@ resource "aws_ecs_service" "app" {
   name            = var.app_name
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.app.arn
-  desired_count   = var.desired_count
   launch_type     = "EC2"
+  desired_count   = var.desired_count
 
   network_configuration {
     subnets          = var.public_subnets
@@ -65,8 +45,7 @@ resource "aws_ecs_service" "app" {
     container_port   = 80
   }
 
-  deployment_minimum_healthy_percent = 50
-  deployment_maximum_percent         = 200
+  depends_on = [aws_ecs_task_definition.app]
 }
 
 resource "aws_appautoscaling_target" "ecs" {
@@ -77,8 +56,8 @@ resource "aws_appautoscaling_target" "ecs" {
   service_namespace  = "ecs"
 }
 
-resource "aws_appautoscaling_policy" "cpu_scale" {
-  name               = "cpu-scale"
+resource "aws_appautoscaling_policy" "scale_out" {
+  name               = "scale-out"
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.ecs.resource_id
   scalable_dimension = aws_appautoscaling_target.ecs.scalable_dimension
@@ -88,8 +67,7 @@ resource "aws_appautoscaling_policy" "cpu_scale" {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
-    target_value       = 50.0
-    scale_in_cooldown  = 300
-    scale_out_cooldown = 300
+    target_value = 50.0
   }
 }
+
