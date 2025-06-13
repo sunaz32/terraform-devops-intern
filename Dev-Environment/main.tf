@@ -23,14 +23,13 @@ module "alb" {
 module "ecs" {
   source             = "./modules/ecs"
   cluster_name       = var.cluster_name
-  vpc_id             = module.vpc.vpc_id
   public_subnets     = module.vpc.public_subnets
   sg_id              = module.security_group.ecs_sg
   app_name           = var.app_name
   desired_count      = var.desired_count
   min_capacity       = var.min_capacity
   max_capacity       = var.max_capacity
-  execution_role_arn = aws_iam_role.ecs_task_execution.arn
+  execution_role_arn = var.execution_role_arn  
   image_url          = "<your-ecr-image-url>"
   target_group_arn   = module.alb.target_group_arn
 }

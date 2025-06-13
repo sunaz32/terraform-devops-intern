@@ -50,3 +50,9 @@ variable "max_capacity" {
   type        = number
   default     = 3
 }
+
+
+variable "vpc_id" {
+  description = "VPC ID"
+  type        = string
+}
