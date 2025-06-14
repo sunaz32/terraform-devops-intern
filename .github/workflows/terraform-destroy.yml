@@ -1,0 +1,31 @@
+name: Terraform Destroy (Dev)
+
+on:
+  workflow_dispatch:  # Manual trigger from GitHub Actions tab
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform-destroy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::851725602228:role/GitHubTerraform-role
+          aws-region: ap-south-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform -chdir=Dev-Environment init
+
+      - name: Terraform Destroy
+        run: terraform -chdir=Dev-Environment destroy -auto-approve
