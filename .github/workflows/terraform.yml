@@ -30,9 +30,9 @@ jobs:
         run: |
           mkdir -p $TF_WORKING_DIR
           echo "image_url = \"${{ github.event.client_payload.image_url }}\"" > $TF_WORKING_DIR/dev.auto.tfvars
-        
-          - name: Show dev.auto.tfvars
-           run: cat $TF_WORKING_DIR/dev.auto.tfvars
+
+      - name: Show dev.auto.tfvars
+        run: cat $TF_WORKING_DIR/dev.auto.tfvars
 
       - name: Terraform Init
         run: terraform -chdir=$TF_WORKING_DIR init
