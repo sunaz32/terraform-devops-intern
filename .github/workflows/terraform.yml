@@ -26,10 +26,10 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v3
 
-      - name: Create auto.tfvars with image URL
+      - name: Create dev.auto.tfvars with image URL
         run: |
           mkdir -p $TF_WORKING_DIR
-          echo 'image_url = "${{ github.event.client_payload.image_url }}"' > $TF_WORKING_DIR/dev.auto.tfvars
+          echo "image_url = \"${{ github.event.client_payload.image_url }}\"" > $TF_WORKING_DIR/dev.auto.tfvars
 
       - name: Terraform Init
         run: terraform -chdir=$TF_WORKING_DIR init
