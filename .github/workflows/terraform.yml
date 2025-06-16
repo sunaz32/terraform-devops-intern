@@ -1,12 +1,15 @@
 name: Terraform CI/CD (Dev)
 
 on:
-  push:
-    branches: [ dev ]
+  repository_dispatch:
+    types: [deploy-dev]
 
 permissions:
   id-token: write
   contents: read
+
+env:
+  TF_WORKING_DIR: Dev-Environment
 
 jobs:
   terraform:
@@ -23,15 +26,19 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v3
 
+      - name: Create auto.tfvars with image URL
+        run: |
+          mkdir -p $TF_WORKING_DIR
+          echo 'image_url = "${{ github.event.client_payload.image_url }}"' > $TF_WORKING_DIR/dev.auto.tfvars
+
       - name: Terraform Init
-        run: terraform -chdir=Dev-Environment init
+        run: terraform -chdir=$TF_WORKING_DIR init
 
       - name: Terraform Validate
-        run: terraform -chdir=Dev-Environment validate
+        run: terraform -chdir=$TF_WORKING_DIR validate
 
       - name: Terraform Plan
-        run: terraform -chdir=Dev-Environment plan -out=tfplan
+        run: terraform -chdir=$TF_WORKING_DIR plan -out=tfplan
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/dev'
-        run: terraform -chdir=Dev-Environment apply -auto-approve tfplan
+        run: terraform -chdir=$TF_WORKING_DIR apply -auto-approve tfplan
