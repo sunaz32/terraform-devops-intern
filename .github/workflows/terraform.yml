@@ -16,35 +16,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the correct branch
       - name: Checkout specified branch
         uses: actions/checkout@v3
         with:
           ref: ${{ github.event.client_payload.target_branch }}
 
+      # Step 2: Set up AWS credentials using OIDC
       - name: Configure AWS via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::851725602228:role/GitHubTerraform-role
           aws-region: ap-south-1
 
-      - uses: hashicorp/setup-terraform@v3
+      # Step 3: Set up Terraform CLI
+      - name: Set up Terraform CLI
+        uses: hashicorp/setup-terraform@v3
 
+      # Step 4: Create dev.auto.tfvars dynamically from dispatch payload
       - name: Create dev.auto.tfvars with image URL
         run: |
           mkdir -p $TF_WORKING_DIR
           echo "image_url = \"${{ github.event.client_payload.image_url }}\"" > $TF_WORKING_DIR/dev.auto.tfvars
 
+      # Step 5: Show the generated tfvars file (for debugging)
       - name: Show dev.auto.tfvars
         run: cat $TF_WORKING_DIR/dev.auto.tfvars
 
+      # Step 6: Terraform Init
       - name: Terraform Init
         run: terraform -chdir=$TF_WORKING_DIR init
 
+      # Step 7: Terraform Validate
       - name: Terraform Validate
         run: terraform -chdir=$TF_WORKING_DIR validate
 
+      # Step 8: Terraform Plan
       - name: Terraform Plan
         run: terraform -chdir=$TF_WORKING_DIR plan -out=tfplan
 
+      # Step 9: Terraform Apply
       - name: Terraform Apply
         run: terraform -chdir=$TF_WORKING_DIR apply -auto-approve tfplan
