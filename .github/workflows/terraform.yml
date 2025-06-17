@@ -41,8 +41,9 @@ jobs:
       - name:  Confirm image_url variable in Terraform
         run: terraform -chdir=$TF_WORKING_DIR console <<< "var.image_url"
 
-      - name:  Terraform Init
-        run: terraform -chdir=$TF_WORKING_DIR init
+      - name:  Terraform Init (with backend reconfigure)
+        run: terraform -chdir=$TF_WORKING_DIR init -reconfigure
+
 
       - name:  Terraform Validate
         run: terraform -chdir=$TF_WORKING_DIR validate
