@@ -35,16 +35,16 @@ jobs:
           mkdir -p $TF_WORKING_DIR
           echo "image_url = \"${{ github.event.client_payload.image_url }}\"" > $TF_WORKING_DIR/dev.auto.tfvars
 
-      - name: 📂 List contents of $TF_WORKING_DIR (debug)
-        run: ls -laR $TF_WORKING_DIR
-
-      - name: 🧾 Show dev.auto.tfvars contents
+      - name: 🧾 Show dev.auto.tfvars
         run: cat $TF_WORKING_DIR/dev.auto.tfvars
 
-      - name: 🧠 Confirm image_url in Terraform console
-        run: terraform -chdir=$TF_WORKING_DIR console <<< "var.image_url"
+      - name: 🧾 Show backend.tf (debug)
+        run: cat $TF_WORKING_DIR/backend.tf
 
-      - name: 🧪 Terraform Init (with reconfigure)
+      - name: 📁 List Terraform directory contents (debug)
+        run: ls -la $TF_WORKING_DIR
+
+      - name: 🌍 Terraform Init (with reconfigure)
         run: terraform -chdir=$TF_WORKING_DIR init -reconfigure
 
       - name: ✅ Terraform Validate
