@@ -30,3 +30,7 @@ variable "execution_role_arn" {
   description = "IAM role ARN for ECS task execution"
   type        = string
 }
+variable "image_url" {
+  description = "Docker image URL to deploy"
+  type        = string
+}
