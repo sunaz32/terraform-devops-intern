@@ -9,7 +9,7 @@ variable "app_name" {
 }
 
 variable "image_url" {
-  description = "Docker image URL for the application"
+  description = "Docker image URL for ECS task"
   type        = string
 }
 

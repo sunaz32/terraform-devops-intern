@@ -31,6 +31,7 @@ variable "execution_role_arn" {
   type        = string
 }
 variable "image_url" {
-  description = "Docker image URL to deploy"
+  description = "Docker image URL passed from GitHub Actions"
   type        = string
 }
+
