@@ -21,6 +21,10 @@ on:
         required: true
         type: string
 
+permissions:
+  id-token: write       # Needed for OIDC authentication
+  contents: read        # Needed to clone repo
+
 jobs:
   terraform:
     name: Terraform Deploy
@@ -36,7 +40,7 @@ jobs:
         with:
           ref: ${{ github.event.inputs.target_branch || inputs.target_branch }}
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::851725602228:role/GitHubTerraform-role
@@ -57,5 +61,5 @@ jobs:
       - name: Terraform Plan
         run: terraform -chdir=Dev-Environment plan -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}"
 
-      - name: Terraform Apply with Confirmation
+      - name: Terraform Apply
         run: terraform -chdir=Dev-Environment apply -auto-approve -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}"
