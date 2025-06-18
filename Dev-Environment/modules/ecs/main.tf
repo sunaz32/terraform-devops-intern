@@ -34,9 +34,9 @@ resource "aws_ecs_service" "app" {
   desired_count   = var.desired_count
 
   network_configuration {
-    subnets          = var.public_subnets
-    security_groups  = [var.sg_id]
-    assign_public_ip = true
+    subnets         = var.public_subnets
+    security_groups = [var.sg_id]
+    # Removed assign_public_ip because it's not supported for EC2 launch type
   }
 
   load_balancer {
@@ -70,4 +70,3 @@ resource "aws_appautoscaling_policy" "scale_out" {
     target_value = 50.0
   }
 }
-
