@@ -10,41 +10,52 @@ on:
         required: true
         type: string
 
-permissions:
-  id-token: write
-  contents: read
-
-env:
-  TF_WORKING_DIR: Dev-Environment
+  workflow_dispatch:
+    inputs:
+      image_url:
+        description: 'Docker image URL'
+        required: true
+        type: string
+      target_branch:
+        description: 'Terraform code branch to deploy'
+        required: true
+        type: string
 
 jobs:
   terraform:
+    name: Terraform Deploy
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout specified branch
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.target_branch }}
+    defaults:
+      run:
+        shell: bash
 
-      - name: Configure AWS via OIDC
-        uses: aws-actions/configure-aws-credentials@v4
+    steps:
+      - name: Checkout Terraform Code
+        uses: actions/checkout@v4
         with:
-          role-to-assume: arn:aws:iam::851725602228:role/GitHubTerraform-role
+          ref: ${{ github.event.inputs.target_branch || inputs.target_branch }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::851725602228:role/github-oidc-role
+          role-session-name: github-actions
           aws-region: ap-south-1
 
-      - uses: hashicorp/setup-terraform@v3
-
-      - name: Create dev.auto.tfvars with image URL
-        run: |
-          mkdir -p $TF_WORKING_DIR
-          echo "image_url = \"${{ inputs.image_url }}\"" > $TF_WORKING_DIR/dev.auto.tfvars
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
 
       - name: Terraform Init
-        run: terraform -chdir=$TF_WORKING_DIR init -reconfigure
+        run: terraform -chdir=Dev-Environment init -backend-config="key=dev/terraform.tfstate"
+
+      - name: Terraform Validate
+        run: terraform -chdir=Dev-Environment validate
 
       - name: Terraform Plan
-        run: terraform -chdir=$TF_WORKING_DIR plan -out=tfplan
+        run: terraform -chdir=Dev-Environment plan -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}"
 
-      - name: Terraform Apply
-        run: terraform -chdir=$TF_WORKING_DIR apply -auto-approve tfplan
+      - name: Terraform Apply with Confirmation
+        run: terraform -chdir=Dev-Environment apply -auto-approve -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}"
