@@ -6,6 +6,9 @@ on:
       image_url:
         required: true
         type: string
+      target_branch:
+        required: true
+        type: string
 
 permissions:
   id-token: write
@@ -19,8 +22,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout specified branch
         uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.target_branch }}
 
       - name: Configure AWS via OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -33,11 +38,13 @@ jobs:
       - name: Create dev.auto.tfvars with image URL
         run: |
           mkdir -p $TF_WORKING_DIR
-          echo 'image_url = "${{ inputs.image_url }}"' > $TF_WORKING_DIR/dev.auto.tfvars
+          echo "image_url = \"${{ inputs.image_url }}\"" > $TF_WORKING_DIR/dev.auto.tfvars
 
       - name: Terraform Init
-        run: terraform -chdir=$TF_WORKING_DIR init
+        run: terraform -chdir=$TF_WORKING_DIR init -reconfigure
 
-      - name: Terraform Validate
-        run: terrafor_WORKING_DIR apply -auto-approve tfplan
-    
+      - name: Terraform Plan
+        run: terraform -chdir=$TF_WORKING_DIR plan -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform -chdir=$TF_WORKING_DIR apply -auto-approve tfplan
