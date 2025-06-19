@@ -34,3 +34,12 @@ module "ecs" {
   image_url         = var.image_url
   target_group_arn   = module.alb.target_group_arn
 }
+
+module "ecs_instance" {
+  source       = "./modules/ecs_ec2"
+  app_name     = var.app_name
+  vpc_id       = module.vpc.vpc_id
+  subnet_id    = module.vpc.public_subnets[0]
+  cluster_name = var.cluster_name
+  alb_sg_id    = module.alb.alb_sg_id
+}
