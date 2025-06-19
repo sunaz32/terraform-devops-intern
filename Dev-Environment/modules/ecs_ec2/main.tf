@@ -1,6 +1,7 @@
 resource "aws_key_pair" "ecs_key" {
   key_name   = "ecs-key"
-  public_key = file("~/.ssh/id_rsa.pub") # Ensure this file exists
+  public_key = file("${path.module}/../../ecs_key.pub")
+ # Ensure this file exists
 }
 
 resource "aws_iam_role" "ecs_instance_role" {
