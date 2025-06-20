@@ -42,4 +42,5 @@ module "ecs_instance" {
   subnet_id    = module.vpc.public_subnets[0]
   cluster_name = var.cluster_name
   alb_sg_id    = module.alb.alb_sg_id
+  ecs_key_public   = var.ecs_key_public  # ✅ pass it from root variable
 }
