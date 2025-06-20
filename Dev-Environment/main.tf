@@ -24,7 +24,7 @@ module "ecs" {
   source             = "./modules/ecs"
   cluster_name       = var.cluster_name
   public_subnets     = module.vpc.public_subnets
-  sg_id            = module.security_group.ecs_sg_id
+  ecs_sg_id            = module.security_group.ecs_sg_id
   vpc_id             = module.vpc.vpc_id
   app_name           = var.app_name
   desired_count      = var.desired_count
