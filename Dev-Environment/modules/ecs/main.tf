@@ -35,7 +35,7 @@ resource "aws_ecs_service" "app" {
 
   network_configuration {
     subnets         = var.public_subnets
-    security_groups = [var.sg_id]
+    security_groups = [var.ecs_sg_id]
     # Removed assign_public_ip because it's not supported for EC2 launch type
   }
 

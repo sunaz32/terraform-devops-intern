@@ -24,7 +24,7 @@ variable "public_subnets" {
   type        = list(string)
 }
 
-variable "sg_id" {
+variable "ecs_sg_id" {
   description = "Security group ID for the ECS service"
   type        = string
 }

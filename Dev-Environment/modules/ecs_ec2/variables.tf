@@ -18,7 +18,7 @@ variable "cluster_name" {
   type        = string
 }
 
-variable "alb_sg_id" {
+variable "ecs_sg_id" {
   description = "ALB security group ID to allow ALB → ECS traffic"
   type        = string
 }
