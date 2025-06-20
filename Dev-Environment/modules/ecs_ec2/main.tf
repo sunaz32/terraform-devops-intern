@@ -3,7 +3,7 @@ resource "aws_key_pair" "ecs_key" {
   public_key = var.ecs_key_public  # ✅ use the GitHub secret passed as a var
 }
 resource "aws_iam_role" "ecs_instance_role" {
-  name = "ecsInstanceRole"
+  name = "ecs-Instance-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
