@@ -35,3 +35,8 @@ variable "image_url" {
   type        = string
 }
 
+variable "ecs_key_public" {
+  description = "SSH public key string passed from GitHub Secret"
+  type        = string
+}
+

@@ -1,9 +1,7 @@
 resource "aws_key_pair" "ecs_key" {
-  key_name   = "ecs-key"
-  public_key = file("${path.module}/../../ecs_key.pub")
- # Ensure this file exists
+  key_name   = "${var.app_name}-key"
+  public_key = var.ecs_key_public  # ✅ use the GitHub secret passed as a var
 }
-
 resource "aws_iam_role" "ecs_instance_role" {
   name = "ecsInstanceRole"
 

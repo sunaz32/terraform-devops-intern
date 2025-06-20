@@ -22,3 +22,8 @@ variable "alb_sg_id" {
   description = "ALB security group ID to allow ALB → ECS traffic"
   type        = string
 }
+
+variable "ecs_key_public" {
+  description = "Public key content for ECS EC2 instance"
+  type        = string
+}
