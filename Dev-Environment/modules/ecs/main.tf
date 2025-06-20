@@ -17,8 +17,8 @@ resource "aws_ecs_task_definition" "app" {
       essential = true,
       portMappings = [
         {
-          containerPort = 80,
-          hostPort      = 80,
+          containerPort = 5000,
+          hostPort      = 5000,
           protocol      = "tcp"
         }
       ]
@@ -42,7 +42,7 @@ resource "aws_ecs_service" "app" {
   load_balancer {
     target_group_arn = var.target_group_arn
     container_name   = var.app_name
-    container_port   = 80
+    container_port   = 5000
   }
 
   depends_on = [aws_ecs_task_definition.app]
