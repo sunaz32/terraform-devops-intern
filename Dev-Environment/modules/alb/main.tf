@@ -52,7 +52,3 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-output "alb_dns" {
-  description = "ALB DNS Name"
-  value       = aws_lb.app.dns_name
-}
