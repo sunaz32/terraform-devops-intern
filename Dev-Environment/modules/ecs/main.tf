@@ -6,8 +6,8 @@ resource "aws_ecs_task_definition" "app" {
   family                   = var.app_name
   requires_compatibilities = ["EC2"]
   network_mode             = "awsvpc"
-  cpu                      = "256"
-  memory                   = "512"
+  cpu                      = "128"
+  memory                   = "256"
   execution_role_arn       = var.execution_role_arn
 
   container_definitions = jsonencode([
