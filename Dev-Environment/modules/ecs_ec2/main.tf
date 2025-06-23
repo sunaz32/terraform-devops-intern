@@ -35,7 +35,7 @@ data "aws_ssm_parameter" "ecs_ami" {
 
 resource "aws_instance" "ecs_ec2" {
   ami                         = data.aws_ssm_parameter.ecs_ami.value
-  instance_type               = "t2.micro"
+  instance_type               = "t2.small"
   subnet_id                   = var.subnet_id
   key_name                    = aws_key_pair.ecs_key.key_name
   vpc_security_group_ids      = [var.ecs_sg_id]                    # ✅ Use shared ECS SG
