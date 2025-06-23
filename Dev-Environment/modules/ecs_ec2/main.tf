@@ -42,11 +42,12 @@ resource "aws_instance" "ecs_ec2" {
   iam_instance_profile        = aws_iam_instance_profile.ecs_instance_profile.name
   associate_public_ip_address = true
 
-  user_data_base64 = base64encode(<<EOF
+  user_data = base64encode(<<EOF
 #!/bin/bash
 echo ECS_CLUSTER=${var.cluster_name} >> /etc/ecs/ecs.config
 EOF
-  )
+)
+
 
   tags = {
     Name = "${var.app_name}-ecs-node"
