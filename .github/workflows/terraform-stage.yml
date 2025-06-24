@@ -1,0 +1,90 @@
+name: Terraform CI/CD (Stage)
+
+on:
+  workflow_call:
+    inputs:
+      image_url:
+        required: true
+        type: string
+      target_branch:
+        required: true
+        type: string
+      ecs_key_public:
+        required: true
+        type: string
+      bastion_key_name:
+        required: true
+        type: string
+
+  workflow_dispatch:
+    inputs:
+      image_url:
+        description: 'Docker image URL'
+        required: true
+        type: string
+      target_branch:
+        description: 'Terraform branch to deploy'
+        required: true
+        type: string
+      ecs_key_public:
+        description: 'SSH public key for ECS EC2'
+        required: true
+        type: string
+      bastion_key_name:
+        description: 'Key name for Bastion Host'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform Deploy - Stage
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ap-south-1
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout Terraform Code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.target_branch || inputs.target_branch }}
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::851725602228:role/GitHubTerraform-role
+          role-session-name: github-actions
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: Terraform Init
+        run: terraform -chdir=stage-environment init -backend-config="key=stage/terraform.tfstate"
+
+      - name: Terraform Validate
+        run: terraform -chdir=stage-environment validate
+
+      - name: Terraform Plan
+        run: |
+          terraform -chdir=stage-environment plan \
+            -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
+            -var="ecs_key_public=${{ github.event.inputs.ecs_key_public || inputs.ecs_key_public }}" \
+            -var="bastion_key_name=${{ github.event.inputs.bastion_key_name || inputs.bastion_key_name }}"
+
+      - name: Terraform Apply
+        run: |
+          terraform -chdir=stage-environment apply -auto-approve \
+            -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
+            -var="ecs_key_public=${{ github.event.inputs.ecs_key_public || inputs.ecs_key_public }}" \
+            -var="bastion_key_name=${{ github.event.inputs.bastion_key_name || inputs.bastion_key_name }}"
