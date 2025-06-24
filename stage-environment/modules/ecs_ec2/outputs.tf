@@ -1,0 +1,1 @@
+output "instance_id" { value = aws_instance.ecs_ec2.id }
