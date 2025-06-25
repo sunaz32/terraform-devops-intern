@@ -10,3 +10,6 @@ variable "alb_zone_name" {
   description = "Route 53 hosted zone name (e.g. visiontechguru.in)"
   type        = string
 }
+variable "environment" {
+  type = string
+}
