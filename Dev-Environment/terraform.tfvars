@@ -1,8 +1,4 @@
 region         = "ap-south-1"
-app_name       = "naziya-devops-intern-app"
-cluster_name   = "naziya-devops-cluster-dev"
-alb_domain     = "dev.naziya.visiontechguru.in"
-desired_count  = 2
-min_capacity   = 2
-max_capacity   = 4
-execution_role_arn = "arn:aws:iam::851725602228:role/ecsTaskExecutionRole"
+ecs_key_name   = "dev-ecs-key"
+ecs_ami_id     = "ami-0e670eb768a5fc3d4"
+image_url      = "123456789012.dkr.ecr.ap-south-1.amazonaws.com/dev-app:latest"
