@@ -24,6 +24,7 @@ module "alb" {
   alb_zone_name  = var.alb_zone_name
    alb_domain       = var.alb_domain
     alb_sg_id         = module.security_group.alb_sg_id
+    environment         = var.environment
 }
   
  
