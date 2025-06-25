@@ -21,8 +21,12 @@ module "alb" {
   app_name          = "naz-dev-app"
   vpc_id            = module.vpc.vpc_id
   public_subnet_ids = module.vpc.public_subnet_ids
-  alb_sg_id         = module.security_group.alb_sg_id
+  alb_zone_name  = var.alb_zone_name
+   alb_domain       = var.alb_domain
+    alb_sg_id         = module.security_group.alb_sg_id
 }
+  
+ 
 
 module "ecs" {
   source    = "../modules/ecs"
