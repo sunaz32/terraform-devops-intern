@@ -46,4 +46,5 @@ module "ecs_ec2" {
   ecs_sg_id            = module.security_group.ecs_sg_id
   image_url            = var.image_url
   container_port       = 5000
+  environment         = var.environment 
 }
