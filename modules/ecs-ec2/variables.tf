@@ -1,7 +1,7 @@
 variable "app_name" {}
 variable "ami_id" {}
 variable "ecs_instance_type" {}
-variable "ecs_key_name" {}
+variable "ecs_key_public" {}
 variable "ecs_sg_id" {}
 variable "subnet_ids" {
   type = list(string)

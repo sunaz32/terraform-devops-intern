@@ -1,5 +1,8 @@
 variable "region" {}
-variable "ecs_key_name" {}
+variable "ecs_key_public" {
+  description = "Public key for the ECS EC2 instances"
+  type        = string
+}
 variable "ecs_ami_id" {}
 variable "image_url" {}
 variable "alb_domain" {
