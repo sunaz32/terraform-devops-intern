@@ -63,7 +63,7 @@ resource "aws_ecs_task_definition" "app" {
 resource "aws_ecs_service" "app" {
   name            = "${var.app_name}-service"
   cluster         = var.ecs_cluster_arn
-  task_definition = aws_ecs_task_definiticon.app.arn
+  task_definition = aws_ecs_task_definition.app.arn
   launch_type     = "EC2"
   desired_count   = 1
 
