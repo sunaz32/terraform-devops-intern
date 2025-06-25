@@ -1,0 +1,95 @@
+name: Terraform CI/CD (Dev)
+
+on:
+  workflow_call:
+    inputs:
+      image_url:
+        required: true
+        type: string
+      target_branch:
+        required: true
+        type: string
+      ecs_key_public:
+        required: true
+        type: string
+
+  workflow_dispatch:
+    inputs:
+      image_url:
+        description: 'Docker image URL to deploy'
+        required: true
+        type: string
+      target_branch:
+        description: 'Terraform branch to deploy (e.g., dev)'
+        required: true
+        type: string
+      ecs_key_public:
+        description: 'ECS EC2 SSH public key'
+        required: true
+        type: string
+      destroy:
+        description: 'Do you want to destroy infrastructure? (yes/no)'
+        required: false
+        default: 'no'
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform Deploy (Dev)
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ap-south-1
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout Terraform Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.target_branch || inputs.target_branch }}
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::<YOUR_AWS_ACCOUNT_ID>:role/GitHubTerraform-role
+          role-session-name: github-actions
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: Terraform Init
+        run: terraform -chdir=terraform/dev-environment init -backend-config="key=dev/terraform.tfstate"
+
+      - name: Terraform Validate
+        run: terraform -chdir=terraform/dev-environment validate
+
+      - name: Terraform Plan
+        run: |
+          terraform -chdir=terraform/dev-environment plan \
+            -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
+            -var="ecs_key_public=${{ github.event.inputs.ecs_key_public || inputs.ecs_key_public }}"
+
+      - name: Terraform Apply
+        if: ${{ github.event.inputs.destroy != 'yes' && inputs.destroy != 'yes' }}
+        run: |
+          terraform -chdir=terraform/dev-environment apply -auto-approve \
+            -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
+            -var="ecs_key_public=${{ github.event.inputs.ecs_key_public || inputs.ecs_key_public }}"
+
+      - name: Terraform Destroy (manual confirmation)
+        if: ${{ github.event.inputs.destroy == 'yes' || inputs.destroy == 'yes' }}
+        run: |
+          echo "⚠️ Destroy requested. Running Terraform destroy with confirmation..."
+          terraform -chdir=terraform/dev-environment destroy \
+            -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
+            -var="ecs_key_public=${{ github.event.inputs.ecs_key_public || inputs.ecs_key_public }}"
