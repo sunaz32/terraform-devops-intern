@@ -41,7 +41,7 @@ module "ecs_ec2" {
   alb_target_group_arn = module.alb.target_group_arn
   ecs_cluster_arn      = module.ecs.cluster_arn
   ecs_instance_type    = "t2.small"
-  ecs_key_name         = var.ecs_key_public
+  ecs_key_public        = var.ecs_key_public
   ami_id               = var.ecs_ami_id
   ecs_sg_id            = module.security_group.ecs_sg_id
   image_url            = var.image_url

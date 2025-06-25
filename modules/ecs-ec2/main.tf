@@ -2,7 +2,7 @@ resource "aws_launch_template" "ecs" {
   name_prefix   = "${var.app_name}-ecs-launch-"
   image_id      = var.ami_id
   instance_type = var.ecs_instance_type
-  key_name      = var.ecs_key_public
+  .ecs_key_public   = var.ecs_key_public
 
   user_data = base64encode(<<EOF
 #!/bin/bash
