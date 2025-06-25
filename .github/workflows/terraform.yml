@@ -76,15 +76,15 @@ jobs:
           echo "ECS_AMI_ID=${ECS_AMI_ID}" >> $GITHUB_ENV
 
       - name: Terraform Init
-        run: terraform -chdir=dev-environment init -backend-config="key=dev/terraform.tfstate"
+        run: terraform -chdir=Dev-Environment init -backend-config="key=dev/terraform.tfstate"
 
       - name: Terraform Validate
-        run: terraform -chdir=dev-environment validate
+        run: terraform -chdir=Dev-Environment validate
 
       - name: Terraform Plan
         if: ${{ !(github.event.inputs.destroy == 'true' || inputs.destroy == true) }}
         run: |
-          terraform -chdir=dev-environment plan \
+          terraform -chdir=Dev-Environment plan \
             -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
             -var="ecs_ami_id=${{ env.ECS_AMI_ID }}" \
             -var="ecs_key_public=${{ env.ECS_KEY_PUBLIC }}"
@@ -92,7 +92,7 @@ jobs:
       - name: Terraform Apply
         if: ${{ !(github.event.inputs.destroy == 'true' || inputs.destroy == true) }}
         run: |
-          terraform -chdir=dev-environment apply -auto-approve \
+          terraform -chdir=Dev-Environment apply -auto-approve \
             -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
             -var="ecs_ami_id=${{ env.ECS_AMI_ID }}" \
             -var="ecs_key_public=${{ env.ECS_KEY_PUBLIC }}"
@@ -101,7 +101,7 @@ jobs:
         if: ${{ github.event.inputs.destroy == 'true' || inputs.destroy == true }}
         run: |
           echo "Destroy confirmed. Proceeding..."
-          terraform -chdir=dev-environment destroy -auto-approve \
+          terraform -chdir=Dev-Environment destroy -auto-approve \
             -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
             -var="ecs_ami_id=${{ env.ECS_AMI_ID }}" \
             -var="ecs_key_public=${{ env.ECS_KEY_PUBLIC }}"
