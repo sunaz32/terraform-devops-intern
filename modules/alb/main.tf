@@ -1,4 +1,4 @@
-resource "aws_lb" "app" {
+resource "aws_lb" "app_alb" {
   name               = "${var.app_name}-alb"
   internal           = false
   load_balancer_type = "application"
@@ -42,8 +42,9 @@ resource "aws_route53_record" "alb_domain" {
   name    = var.alb_domain
   type    = "A"
   alias {
-    name                   = aws_lb.app.dns_name
-    zone_id                = aws_lb.app.zone_id
+    name                   = aws_lb.app_alb.dns_name
+    zone_id                = aws_lb.app_alb.zone_id
     evaluate_target_health = true
   }
 }
+
