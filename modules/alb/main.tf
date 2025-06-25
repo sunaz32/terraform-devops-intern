@@ -48,5 +48,6 @@ resource "aws_route53_record" "alb_domain" {
     zone_id                = aws_lb.app_alb.zone_id
     evaluate_target_health = true
   }
+  allow_overwrite = true
 }
 

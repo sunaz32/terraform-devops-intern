@@ -1,4 +1,5 @@
 variable "region" {}
+variable "ecs_key_public" {}
 variable "ecs_key_public" {
   description = "Public key for the ECS EC2 instances"
   type        = string

@@ -1,5 +1,5 @@
 resource "aws_key_pair" "ecs_key" {
-  key_name   = "${var.environment}-ecs-key"
+  key_name   = "var.ecs_key_name"
   public_key = var.ecs_key_public
 }
 
