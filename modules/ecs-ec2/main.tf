@@ -1,8 +1,13 @@
+resource "aws_key_pair" "ecs_key" {
+  key_name   = "${var.environment}-ecs-key"
+  public_key = var.ecs_key_public
+}
+
 resource "aws_launch_template" "ecs" {
   name_prefix   = "${var.app_name}-ecs-launch-"
   image_id      = var.ami_id
   instance_type = var.ecs_instance_type
-  .ecs_key_public   = var.ecs_key_public
+  key_name      = aws_key_pair.ecs_key.key_name
 
   user_data = base64encode(<<EOF
 #!/bin/bash
@@ -21,10 +26,12 @@ resource "aws_autoscaling_group" "ecs" {
   max_size             = 4
   min_size             = 2
   vpc_zone_identifier  = var.subnet_ids
+
   launch_template {
     id      = aws_launch_template.ecs.id
     version = "$Latest"
   }
+
   tag {
     key                 = "Name"
     value               = "${var.app_name}-ecs-instance"
@@ -36,19 +43,15 @@ resource "aws_ecs_task_definition" "app" {
   family                   = "${var.app_name}-task"
   requires_compatibilities = ["EC2"]
   network_mode             = "bridge"
-  container_definitions = jsonencode([
-    {
-      name      = "${var.app_name}"
-      image     = var.image_url
-      essential = true
-      portMappings = [
-        {
-          containerPort = var.container_port
-          hostPort      = var.container_port
-        }
-      ]
-    }
-  ])
+  container_definitions = jsonencode([{
+    name      = "${var.app_name}"
+    image     = var.image_url
+    essential = true
+    portMappings = [{
+      containerPort = var.container_port
+      hostPort      = var.container_port
+    }]
+  }])
 }
 
 resource "aws_ecs_service" "app" {
