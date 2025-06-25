@@ -3,17 +3,19 @@ provider "aws" {
 }
 
 module "vpc" {
-  source         = "../modules/vpc"
-  vpc_name       = "naz-dev-vpc"
-  cidr_block     = "10.10.0.0/16"
-  public_subnets = ["10.10.1.0/24", "10.10.2.0/24"]
-  private_subnets = []
+  source              = "../modules/vpc"
+  environment         = var.environment
+  vpc_cidr            = var.vpc_cidr
+  availability_zones  = var.availability_zones
+  public_subnets      = var.public_subnets
+  private_subnets     = var.private_subnets
 }
+
 
 module "security_group" {
   source  = "../modules/security_group"
   vpc_id  = module.vpc.vpc_id
-  env     = "dev"
+  env   = "dev"
 }
 
 module "alb" {

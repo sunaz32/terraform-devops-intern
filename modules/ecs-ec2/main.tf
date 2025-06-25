@@ -43,21 +43,27 @@ resource "aws_ecs_task_definition" "app" {
   family                   = "${var.app_name}-task"
   requires_compatibilities = ["EC2"]
   network_mode             = "bridge"
-  container_definitions = jsonencode([{
-    name      = "${var.app_name}"
-    image     = var.image_url
-    essential = true
-    portMappings = [{
-      containerPort = var.container_port
-      hostPort      = var.container_port
-    }]
-  }])
+  cpu                      = 256      
+  memory                   = 512   
+
+  container_definitions = jsonencode([
+    {
+      name      = var.app_name
+      image     = var.image_url
+      essential = true
+      memory    = var.container_memory  # Minimum container memory
+      portMappings = [{
+        containerPort = var.container_port
+        hostPort      = var.container_port
+      }]
+    }
+  ])
 }
 
 resource "aws_ecs_service" "app" {
   name            = "${var.app_name}-service"
   cluster         = var.ecs_cluster_arn
-  task_definition = aws_ecs_task_definition.app.arn
+  task_definition = aws_ecs_task_definiticon.app.arn
   launch_type     = "EC2"
   desired_count   = 1
 

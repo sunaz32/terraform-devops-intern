@@ -18,3 +18,8 @@ variable "container_port" {
 variable "environment" {
   type = string
 }
+variable "container_memory" {
+  type        = number
+  default     = 512
+  description = "Memory (in MiB) for the container"
+}

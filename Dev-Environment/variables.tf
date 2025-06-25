@@ -16,3 +16,26 @@ variable "alb_zone_name" {
 variable "environment" {
   type = string
 }
+variable "container_port" {
+  type = number
+}
+
+variable "vpc_cidr" {
+  type        = string
+  description = "CIDR block for the VPC"
+}
+
+variable "availability_zones" {
+  type        = list(string)
+  description = "List of availability zones"
+}
+
+variable "public_subnets" {
+  type        = list(string)
+  description = "List of public subnet CIDRs"
+}
+
+variable "private_subnets" {
+  type        = list(string)
+  description = "List of private subnet CIDRs"
+}

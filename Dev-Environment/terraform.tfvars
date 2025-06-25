@@ -5,4 +5,8 @@ ecs_ami_id     = "" # dynamically set at runtime
 alb_domain     = "dev.naziya.visiontechguru.in"
 alb_zone_name  = "visiontechguru.in"
 environment = "dev"
-
+container_port= "5000"
+vpc_cidr          = "10.20.0.0/16"
+availability_zones = ["ap-south-1a", "ap-south-1b"]
+public_subnets    = ["10.20.1.0/24", "10.20.2.0/24"]
+private_subnets   = ["10.20.3.0/24", "10.20.4.0/24"]
