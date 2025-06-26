@@ -1,5 +1,6 @@
 region         = "ap-south-1"
 ecs_key_public   = ""
+ecs_key_name = dev-ecs-key
 ecs_ami_id     = "" # dynamically set at runtime
 # image_url    = "" # not set here
 alb_domain     = "dev.naziya.visiontechguru.in"
