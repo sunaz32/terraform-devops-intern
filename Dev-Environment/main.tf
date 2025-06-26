@@ -47,6 +47,7 @@ module "ecs_ec2" {
   ecs_cluster_arn      = module.ecs.cluster_arn
   ecs_instance_type    = "t2.small"
   ami_id             = data.aws_ssm_parameter.ecs_ami.value
+  public_subnets   = module.vpc.public_subnets
   ecs_sg_id            = module.security_group.ecs_sg_id
   image_url            = var.image_url
   container_port       = 5000
