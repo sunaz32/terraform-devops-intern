@@ -86,5 +86,4 @@ resource "aws_ecs_service" "app" {
     container_name   = var.app_name
     container_port   = var.container_port
   }
-   depends_on = [aws_lb_target_group_attachment.ecs]
 }
