@@ -1,10 +1,6 @@
 variable "app_name" {}
 variable "ami_id" {}
 variable "ecs_instance_type" {}
-variable "ecs_key_public" {
-  description = "Public key for EC2 access"
-  type        = string
-}
 variable "ecs_sg_id" {}
 variable "subnet_ids" {
   type = list(string)
