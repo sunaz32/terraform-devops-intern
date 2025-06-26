@@ -42,7 +42,7 @@ module "ecs" {
 module "ecs_ec2" {
   source               = "../modules/ecs-ec2"
   app_name             = "naz-dev-app"
-  subnet_ids           = module.vpc.public_subnet
+  subnet_ids = module.vpc.public_subnets
   alb_target_group_arn = module.alb.target_group_arn
   ecs_cluster_arn      = module.ecs.cluster_arn
   ecs_instance_type    = "t2.small"
