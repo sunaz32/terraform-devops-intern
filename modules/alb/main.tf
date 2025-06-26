@@ -20,7 +20,7 @@ resource "aws_lb_target_group" "app_tg" {
   port        = 5000
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "instance"
+  target_type = "ip"
 
    health_check {
     path                = "/"               # 👈 Update if your app exposes e.g. /health

@@ -111,7 +111,7 @@ resource "aws_autoscaling_group" "ecs" {
 resource "aws_ecs_task_definition" "app" {
   family                   = "${var.app_name}-task"
   requires_compatibilities = ["EC2"]
-  network_mode             = "bridge"
+  network_mode             = "awsvpc"
   cpu                      = 256      
   memory                   = 512 
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn  
@@ -136,6 +136,12 @@ resource "aws_ecs_service" "app" {
   task_definition = aws_ecs_task_definition.app.arn
   launch_type     = "EC2"
   desired_count   = 1
+
+  network_configuration {
+    subnets          = var.public_subnets
+    security_groups  = [module.security_group.ecs_sg_id]
+    assign_public_ip = false
+  }
 
   load_balancer {
     target_group_arn = var.alb_target_group_arn

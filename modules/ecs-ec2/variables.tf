@@ -8,6 +8,10 @@ variable "ecs_sg_id" {}
 variable "subnet_ids" {
   type = list(string)
 }
+variable "public_subnets" {
+  type        = list(string)
+  description = "List of CIDRs for public subnets"
+}
 variable "alb_target_group_arn" {}
 variable "ecs_cluster_arn" {}
 variable "image_url" {}
