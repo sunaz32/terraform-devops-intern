@@ -18,15 +18,16 @@ resource "local_file" "private_key" {
 
 resource "aws_launch_template" "ecs" {
   name_prefix   = "${var.app_name}-ecs-launch-"
-  image_id      = var.ami_id
+  image_id = data.aws_ssm_parameter.ecs_ami.value
   instance_type = var.ecs_instance_type
   key_name      = aws_key_pair.ecs_key.key_name
 
   user_data = base64encode(<<EOF
 #!/bin/bash
-echo ECS_CLUSTER=${var.app_name}-cluster >> /etc/ecs/ecs.config
+echo "ECS_CLUSTER=${var.app_name}-cluster" >> /etc/ecs/ecs.config
+systemctl enable --now ecs
 EOF
-  )
+)
 
   network_interfaces {
     associate_public_ip_address = true
