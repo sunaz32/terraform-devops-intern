@@ -21,6 +21,17 @@ resource "aws_lb_target_group" "app_tg" {
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "instance"
+
+   health_check {
+    path                = "/"               # 👈 Update if your app exposes e.g. /health
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    matcher             = "200"             # Expected HTTP code
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
 }
 
 resource "aws_lb_listener" "http" {

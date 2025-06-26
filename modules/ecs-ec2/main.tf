@@ -36,7 +36,7 @@ EOF
 }
 
 resource "aws_autoscaling_group" "ecs" {
-  desired_capacity     = 2
+  desired_capacity     = 1
   max_size             = 4
   min_size             = 2
   vpc_zone_identifier  = var.subnet_ids
@@ -86,4 +86,5 @@ resource "aws_ecs_service" "app" {
     container_name   = var.app_name
     container_port   = var.container_port
   }
+   depends_on = [aws_lb_target_group_attachment.ecs]
 }
