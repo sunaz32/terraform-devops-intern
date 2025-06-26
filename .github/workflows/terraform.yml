@@ -13,12 +13,6 @@ on:
         required: false
         type: boolean
         default: false
-      ecs_key_name:
-        required: true
-        type: string
-      ecs_key_public:
-        required: true
-        type: string
 
   workflow_dispatch:
     inputs:
@@ -35,14 +29,6 @@ on:
         required: false
         type: boolean
         default: false
-      ecs_key_name:
-        description: 'Name of the ECS EC2 key pair'
-        required: true
-        type: string
-      ecs_key_public:
-        description: 'Public key value'
-        required: true
-        type: string
 
 permissions:
   id-token: write
@@ -55,7 +41,6 @@ jobs:
 
     env:
       AWS_REGION: ap-south-1
-      ECS_KEY_PUBLIC: ${{ secrets.SSH_PUBLIC_KEY }}
 
     defaults:
       run:
@@ -100,18 +85,14 @@ jobs:
         run: |
           terraform -chdir=Dev-Environment plan \
             -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
-            -var="ecs_ami_id=${{ env.ECS_AMI_ID }}" \
-            -var="ecs_key_public=${{ env.ECS_KEY_PUBLIC }}" \
-            -var="ecs_key_name=${{ github.event.inputs.ecs_key_name || inputs.ecs_key_name }}"
+            -var="ecs_ami_id=${{ env.ECS_AMI_ID }}"
 
       - name: Terraform Apply
         if: ${{ !(github.event.inputs.destroy == 'true' || inputs.destroy == true) }}
         run: |
           terraform -chdir=Dev-Environment apply -auto-approve \
             -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
-            -var="ecs_ami_id=${{ env.ECS_AMI_ID }}" \
-            -var="ecs_key_public=${{ env.ECS_KEY_PUBLIC }}" \
-            -var="ecs_key_name=${{ github.event.inputs.ecs_key_name || inputs.ecs_key_name }}"
+            -var="ecs_ami_id=${{ env.ECS_AMI_ID }}"
 
       - name: Terraform Destroy
         if: ${{ github.event.inputs.destroy == 'true' || inputs.destroy == true }}
@@ -119,6 +100,4 @@ jobs:
           echo "Destroy confirmed. Proceeding..."
           terraform -chdir=Dev-Environment destroy -auto-approve \
             -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
-            -var="ecs_ami_id=${{ env.ECS_AMI_ID }}" \
-            -var="ecs_key_public=${{ env.ECS_KEY_PUBLIC }}" \
-            -var="ecs_key_name=${{ github.event.inputs.ecs_key_name || inputs.ecs_key_name }}"
+            -var="ecs_ami_id=${{ env.ECS_AMI_ID }}"

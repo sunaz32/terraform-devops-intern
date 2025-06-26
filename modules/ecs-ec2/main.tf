@@ -1,7 +1,20 @@
-resource "aws_key_pair" "ecs_key" {
-  key_name   = "var.ecs_key_name"
-  public_key = var.ecs_key_public
+resource "tls_private_key" "ecs_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
 }
+
+resource "aws_key_pair" "ecs_key" {
+  key_name   = "${var.app_name}-key"
+  public_key = tls_private_key.ecs_key.public_key_openssh
+}
+
+resource "local_file" "private_key" {
+  content              = tls_private_key.ecs_key.private_key_pem
+  filename             = "${path.module}/ecs_key.pem"
+  file_permission      = "0600"
+  directory_permission = "0700"
+}
+
 
 resource "aws_launch_template" "ecs" {
   name_prefix   = "${var.app_name}-ecs-launch-"
