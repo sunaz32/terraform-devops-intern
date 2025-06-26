@@ -18,7 +18,7 @@ resource "local_file" "private_key" {
 
 resource "aws_launch_template" "ecs" {
   name_prefix   = "${var.app_name}-ecs-launch-"
-  image_id = data.aws_ssm_parameter.ecs_ami.value
+  image_id = var.ami_id
   instance_type = var.ecs_instance_type
   key_name      = aws_key_pair.ecs_key.key_name
 
