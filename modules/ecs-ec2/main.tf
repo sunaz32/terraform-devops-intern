@@ -139,7 +139,7 @@ resource "aws_ecs_service" "app" {
 
   network_configuration {
     subnets          = var.public_subnets
-    security_groups  = [module.security_group.ecs_sg_id]
+    security_groups  =  [var.ecs_sg_id]
     assign_public_ip = false
   }
 

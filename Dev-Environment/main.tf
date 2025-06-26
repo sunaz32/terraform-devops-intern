@@ -27,7 +27,7 @@ module "alb" {
   source            = "../modules/alb"
   app_name          = "naz-dev-app"
   vpc_id            = module.vpc.vpc_id
-  public_subnet_ids = module.vpc.public_subnet_ids
+  public_subnet_ids = module.vpc.public_subnet
    alb_sg_id         =[ module.security_group.alb_sg_id]
     environment         = var.environment
 }
@@ -42,7 +42,7 @@ module "ecs" {
 module "ecs_ec2" {
   source               = "../modules/ecs-ec2"
   app_name             = "naz-dev-app"
-  subnet_ids           = module.vpc.public_subnet_ids
+  subnet_ids           = module.vpc.public_subnet
   alb_target_group_arn = module.alb.target_group_arn
   ecs_cluster_arn      = module.ecs.cluster_arn
   ecs_instance_type    = "t2.small"
