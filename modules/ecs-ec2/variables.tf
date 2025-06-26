@@ -1,5 +1,8 @@
 variable "app_name" {}
-variable "ami_id" {}
+variable "ami_id" {
+  description = "The AMI ID to use for ECS EC2 instances"
+  type        = string
+}
 variable "ecs_instance_type" {}
 variable "ecs_sg_id" {}
 variable "subnet_ids" {

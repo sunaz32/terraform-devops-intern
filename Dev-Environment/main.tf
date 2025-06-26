@@ -2,6 +2,11 @@ provider "aws" {
   region = var.region
 }
 
+# 🔹 Fetch the latest ECS-optimized AMI
+data "aws_ssm_parameter" "ecs_ami" {
+  name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
+}
+
 module "vpc" {
   source              = "../modules/vpc"
   environment         = var.environment
@@ -41,7 +46,7 @@ module "ecs_ec2" {
   alb_target_group_arn = module.alb.target_group_arn
   ecs_cluster_arn      = module.ecs.cluster_arn
   ecs_instance_type    = "t2.small"
-  ami_id               = var.ecs_ami_id
+  ami_id             = data.aws_ssm_parameter.ecs_ami.value
   ecs_sg_id            = module.security_group.ecs_sg_id
   image_url            = var.image_url
   container_port       = 5000
