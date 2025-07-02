@@ -27,6 +27,11 @@ variable "availability_zones" {
   description = "List of availability zones"
 }
 
+variable "allowed_ssh_cidr" {
+  description = "CIDR allowed to SSH into ECS EC2"
+  type        = string
+}
+
 variable "public_subnets" {
   type        = list(string)
   description = "List of public subnet CIDRs"

@@ -21,6 +21,7 @@ module "security_group" {
   source  = "../modules/security_group"
   vpc_id  = module.vpc.vpc_id
   env   = "dev"
+  allowed_ssh_cidr = "0.0.0.0/0"
 }
 
 module "alb" {
