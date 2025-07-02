@@ -38,8 +38,8 @@ module "ecs_ec2" {
 }
 
 module "ecr" {
-  source   = "./modules/ecr"
-  app_name = var.app_name
+  source        = "../modules/ecr"
+  ecr_repo_name = var.app_name
 }
 
 
