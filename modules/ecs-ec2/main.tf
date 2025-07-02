@@ -54,7 +54,7 @@ resource "aws_launch_template" "ecs" {
   name_prefix   = "${var.app_name}-ecs-launch-"
   image_id      = var.ami_id
   instance_type = var.ecs_instance_type
-  key_name      = "naz-dev-key"  # ✅ MANUAL KEY NAME
+  key_name      = "naz-dev1-key"  # ✅ MANUAL KEY NAME
 
   iam_instance_profile {
     name = aws_iam_instance_profile.ecs_instance_profile.name
