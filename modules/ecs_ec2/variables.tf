@@ -10,3 +10,8 @@ variable "cluster_name" {
   description = "Name of the ECS Cluster to register EC2 instances with"
   type        = string
 }
+variable "ecs_ami_id" {
+  description = "ECS optimized AMI ID (optional override)"
+  type        = string
+  default     = ""
+}
