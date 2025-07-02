@@ -40,7 +40,7 @@ module "ecs_ec2" {
 module "ecs" {
   source             = "../modules/ecs"
   app_name           = var.app_name
-  image_url          = var.container_image_url
+  image_url          = var.image_url
   alb_target_group_arn   = module.alb.target_group_arn
   public_subnet_ids  = module.vpc.public_subnet_ids
   ec2_sg_id          = module.security_group.ec2_sg_id
