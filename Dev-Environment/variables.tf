@@ -47,8 +47,4 @@ variable "app_port" {
   description = "Port on which the application listens"
   type        = number
 }
-variable "alb_target_group_arn" {
-  description = "ARN of the ALB target group"
-  type        = string
-}
 
