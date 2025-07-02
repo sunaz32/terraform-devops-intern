@@ -21,6 +21,7 @@ module "security_group" {
   source  = "../modules/security_group"
   vpc_id  = module.vpc.vpc_id
   env   = "dev"
+  allowed_ssh_cidr = "0.0.0.0/0"
 }
 
 module "alb" {
@@ -53,6 +54,7 @@ module "ecs_ec2" {
   container_port       = 5000
   container_memory     = 512
   environment          = var.environment
+  ec2_key_name         = "naz-dev-1-key"
 }
 
 

@@ -26,3 +26,7 @@ variable "container_memory" {
   default     = 512
   description = "Memory (in MiB) for the container"
 }
+variable "ec2_key_name" {
+  description = "Name of the EC2 key pair to SSH into ECS EC2 instances"
+  type        = string
+}
