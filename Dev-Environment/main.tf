@@ -54,7 +54,7 @@ module "ecs_ec2" {
   container_port       = 5000
   container_memory     = 512
   environment          = var.environment
-  ec2_key_name         = "naz-dev-1-key"
+  ec2_key_name         = "naz-dev-key"
 }
 
 
