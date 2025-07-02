@@ -85,14 +85,12 @@ jobs:
         run: |
           terraform -chdir=Dev-Environment plan \
             -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
-            -var="ecs_ami_id=${{ env.ECS_AMI_ID }}"
 
       - name: Terraform Apply
         if: ${{ !(github.event.inputs.destroy == 'true' || inputs.destroy == true) }}
         run: |
           terraform -chdir=Dev-Environment apply -auto-approve \
             -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
-            -var="ecs_ami_id=${{ env.ECS_AMI_ID }}"
 
       - name: Terraform Destroy
         if: ${{ github.event.inputs.destroy == 'true' || inputs.destroy == true }}
@@ -100,4 +98,4 @@ jobs:
           echo "Destroy confirmed. Proceeding..."
           terraform -chdir=Dev-Environment destroy -auto-approve \
             -var="image_url=${{ github.event.inputs.image_url || inputs.image_url }}" \
-            -var="ecs_ami_id=${{ env.ECS_AMI_ID }}"
+            
