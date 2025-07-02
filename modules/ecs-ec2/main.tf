@@ -1,135 +1,54 @@
-resource "aws_iam_role" "ecs_instance_role" {
-  name = "${var.app_name}-ecs-instance-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = "sts:AssumeRole",
-        Effect = "Allow",
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_instance_attach" {
-  role       = aws_iam_role.ecs_instance_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
-}
-
-resource "aws_iam_instance_profile" "ecs_instance_profile" {
-  name = "${var.app_name}-ecs-instance-profile"
-  role = aws_iam_role.ecs_instance_role.name
-}
-
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "${var.app_name}-ecs-task-execution-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = "sts:AssumeRole",
-        Effect = "Allow",
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+data "aws_ssm_parameter" "ecs_ami" {
+  name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
 }
 
 
-
-
-resource "aws_launch_template" "ecs" {
-  name_prefix   = "${var.app_name}-ecs-launch-"
-  image_id      = var.ami_id
-  instance_type = var.ecs_instance_type
-  key_name      = "naz-dev1-key"  # ✅ MANUAL KEY NAME
+resource "aws_launch_template" "ecs_lt" {
+  name_prefix   = "${var.app_name}-ecs-lt"
+  image_id      = data.aws_ssm_parameter.ecs_ami.value
+  instance_type = var.instance_type
+  key_name      = var.key_name
 
   iam_instance_profile {
-    name = aws_iam_instance_profile.ecs_instance_profile.name
+    name = var.iam_instance_profile_name
   }
 
   user_data = base64encode(<<EOF
 #!/bin/bash
-echo "ECS_CLUSTER=${var.app_name}-cluster" >> /etc/ecs/ecs.config
-systemctl enable --now ecs
+echo ECS_CLUSTER=${var.cluster_name} >> /etc/ecs/ecs.config
 EOF
-)
+  )
 
   network_interfaces {
     associate_public_ip_address = true
-    security_groups             = [var.ecs_sg_id]
+    security_groups             = [var.ec2_sg_id]
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "${var.app_name}-ecs-instance"
+    }
   }
 }
 
 
-resource "aws_autoscaling_group" "ecs" {
-  desired_capacity     = 1
-  max_size             = 3
-  min_size             = 1
-  vpc_zone_identifier  = var.subnet_ids
+resource "aws_autoscaling_group" "ecs_asg" {
+  name                      = "${var.app_name}-ecs-asg"
+  desired_capacity          = 1
+  max_size                  = 2
+  min_size                  = 1
+  vpc_zone_identifier       = var.public_subnet_ids
+  health_check_type         = "EC2"
 
   launch_template {
-    id      = aws_launch_template.ecs.id
+    id      = aws_launch_template.ecs_lt.id
     version = "$Latest"
   }
 
   tag {
     key                 = "Name"
-    value               = "${var.app_name}-ecs-instance"
+    value               = "${var.app_name}-ecs-asg"
     propagate_at_launch = true
-  }
-}
-
-resource "aws_ecs_task_definition" "app" {
-  family                   = "${var.app_name}-task"
-  requires_compatibilities = ["EC2"]
-  network_mode             = "awsvpc"
-  cpu                      = 256      
-  memory                   = 512 
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn  
-
-  container_definitions = jsonencode([
-    {
-      name      = var.app_name
-      image     = var.image_url
-      essential = true
-      memory    = var.container_memory  # Minimum container memory
-      portMappings = [{
-        containerPort = var.container_port
-      }]
-    }
-  ])
-}
-
-resource "aws_ecs_service" "app" {
-  name            = "${var.app_name}-service"
-  cluster         = var.ecs_cluster_arn
-  task_definition = aws_ecs_task_definition.app.arn
-  launch_type     = "EC2"
-  desired_count   = 1
-
-  network_configuration {
-    subnets          = var.public_subnets
-    security_groups  =  [var.ecs_sg_id]
-    
-  }
-
-
-  load_balancer {
-    target_group_arn = var.alb_target_group_arn
-    container_name   = var.app_name
-    container_port   = var.container_port
   }
 }
