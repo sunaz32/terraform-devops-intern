@@ -20,7 +20,6 @@ EOF
   )
 
   network_interfaces {
-    associate_public_ip_address = true
     security_groups             = [var.ec2_sg_id]
   }
 
