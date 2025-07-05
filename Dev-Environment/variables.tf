@@ -4,7 +4,7 @@ variable "region" {
 }
 
 variable "app_name" {
-  description = "The name of the application"
+  description = "Name of the application"
   type        = string
 }
 
