@@ -1,0 +1,10 @@
+region                   = "ap-south-1"
+app_name                 = "naz-dev-intern-app"
+vpc_cidr                 = "10.0.0.0/16"
+public_subnet_cidrs      = ["10.0.1.0/24", "10.0.2.0/24"]
+instance_type            = "t2.small"
+key_name                 = "naz-dev1-key"
+iam_instance_profile_name = "ecsInstanceRole"
+app_port                 = 5000
+image_url      = ""
+alb_domain               = "dev.naziya.visiontechguru.in"
