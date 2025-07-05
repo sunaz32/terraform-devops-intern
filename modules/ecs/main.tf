@@ -35,7 +35,8 @@ resource "aws_ecs_service" "this" {
   }
 
   network_configuration {
-    subnets          = var.public_subnet_ids
+    subnets = length(var.private_subnet_ids) > 0 ? var.private_subnet_ids : var.public_subnet_ids
+
     security_groups  = [var.ec2_sg_id]
   }
 

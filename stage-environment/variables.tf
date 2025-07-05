@@ -23,7 +23,20 @@ variable "private_subnet_cidrs" {
   type        = list(string)
 }
 
+variable "public_subnet_ids" {
+  type = list(string)
+}
+
+variable "private_subnet_ids" {
+  description = "List of private subnet CIDRs"
+  type        = list(string)
+}
+
 variable "key_name" {
+  description = "Key pair name for EC2 instances"
+  type        = string
+}
+variable "bastion_key_name" {
   description = "Key pair name for EC2 instances"
   type        = string
 }

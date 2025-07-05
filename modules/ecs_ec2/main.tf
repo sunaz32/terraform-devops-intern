@@ -37,7 +37,8 @@ resource "aws_autoscaling_group" "ecs_asg" {
   desired_capacity          = 1
   max_size                  = 2
   min_size                  = 1
-  vpc_zone_identifier       = var.public_subnet_ids
+  vpc_zone_identifier = length(var.private_subnet_ids) > 0 ? var.private_subnet_ids : var.public_subnet_ids
+
   health_check_type         = "EC2"
 
   launch_template {

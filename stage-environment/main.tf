@@ -19,14 +19,13 @@ module "security_group" {
 }
 
 module "bastion" {
-  source          = "../modules/bastion"
-  app_name        = var.app_name
-  vpc_id          = module.vpc.vpc_id
-  public_subnet_id = module.vpc.public_subnet_ids[0]
-  bastion_sg_id   = module.security_group.bastion_sg_id
-  key_name        = var.key_name
-  instance_type   = var.bastion_instance_type
-  ami_id          = var.bastion_ami_id
+  source             = "../modules/bastion"
+  app_name           = var.app_name
+  instance_type      = var.bastion_instance_type
+  vpc_id             = module.vpc.vpc_id 
+  public_subnet_id   = module.vpc.public_subnet_ids[0]
+  bastion_sg_id      = module.security_group.bastion_sg_id
+  bastion_key_name   = var.bastion_key_name
 }
 
 module "alb" {

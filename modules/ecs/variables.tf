@@ -12,3 +12,12 @@ variable "ec2_sg_id" {
   description = "Security group ID for ECS EC2 instances"
   type        = string
 }
+
+variable "public_subnet_ids" {
+  type = list(string)
+}
+
+variable "private_subnet_ids" {
+  description = "List of private subnet CIDRs"
+  type        = list(string)
+}

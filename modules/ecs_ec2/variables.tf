@@ -6,6 +6,11 @@ variable "ec2_sg_id" {}
 variable "public_subnet_ids" {
   type = list(string)
 }
+
+variable "private_subnet_ids" {
+  description = "List of private subnet CIDRs"
+  type        = list(string)
+}
 variable "cluster_name" {
   description = "Name of the ECS Cluster to register EC2 instances with"
   type        = string

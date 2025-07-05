@@ -3,18 +3,13 @@ variable "app_name" {
   type        = string
 }
 
-variable "ami_id" {
-  description = "AMI ID for the bastion host"
-  type        = string
-}
-
 variable "instance_type" {
   description = "EC2 instance type for the bastion host"
   type        = string
 }
 
-variable "key_name" {
-  description = "EC2 key pair name for SSH access"
+variable "bastion_key_name" {
+  description = "Key pair name to use for Bastion host SSH access"
   type        = string
 }
 
