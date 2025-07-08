@@ -80,11 +80,11 @@ jobs:
         working-directory: ${{ env.ENV_FOLDER }}
 
       - name: Terraform Apply
-        if: inputs.destroy == true
+        if: inputs.destroy == false
         run: terraform apply -auto-approve -var-file="terraform.tfvars"
         working-directory: ${{ env.ENV_FOLDER }}
 
       - name: Terraform Destroy
-        if: inputs.destroy == false
+        if: inputs.destroy == true
         run: terraform destroy -auto-approve -var-file="terraform.tfvars"
         working-directory: ${{ env.ENV_FOLDER }}
