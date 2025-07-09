@@ -1,5 +1,4 @@
 name: Terraform CI/CD
-
 on:
   workflow_call:
     inputs:
@@ -16,7 +15,6 @@ on:
         required: false
         type: boolean
         default: false
-
   workflow_dispatch:
     inputs:
       image_url:
@@ -36,54 +34,48 @@ on:
         required: false
         type: boolean
         default: false
-
+ 
+# Add permissions for OIDC token generation
+permissions:
+  id-token: write
+  contents: read
 jobs:
   terraform:
     name: Terraform ${{ inputs.destroy && 'Destroy' || 'Deploy' }} - ${{ inputs.env_name }}
     runs-on: ubuntu-latest
-
     env:
       TF_VAR_image_url: ${{ inputs.image_url }}
       AWS_REGION: ap-south-1
       ENV_FOLDER: ${{ inputs.env_name }}-environment
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.6
-
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::851725602228:role/Githubterraform-newrole
           role-session-name: terraform-session
           aws-region: ${{ env.AWS_REGION }}
-
       - name: Terraform Init
         run: terraform init -backend-config="key=${{ inputs.env_name }}/terraform.tfstate"
         working-directory: ${{ env.ENV_FOLDER }}
-
       - name: Terraform Format
         run: terraform fmt -check
         working-directory: ${{ env.ENV_FOLDER }}
-
       - name: Terraform Validate
         run: terraform validate
         working-directory: ${{ env.ENV_FOLDER }}
-
       - name: Terraform Plan
         run: terraform plan -var-file="terraform.tfvars"
         working-directory: ${{ env.ENV_FOLDER }}
-
       - name: Terraform Apply
         if: inputs.destroy == false
         run: terraform apply -auto-approve -var-file="terraform.tfvars"
         working-directory: ${{ env.ENV_FOLDER }}
-
       - name: Terraform Destroy
         if: inputs.destroy == true
         run: terraform destroy -auto-approve -var-file="terraform.tfvars"
