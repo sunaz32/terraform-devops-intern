@@ -40,7 +40,7 @@ variable "key_name" {
 variable "iam_role_name" {
   description = "IAM role name to use for ECS EC2 instances"
   type        = string
- 
+
 }
 
 variable "image_url" {
