@@ -32,7 +32,7 @@ module "ecs_ec2" {
   app_name                  = var.app_name
   instance_type             = var.instance_type
   key_name                  = var.key_name
-  iam_instance_profile_name = var.iam_instance_profile_name
+  iam_role_name            = var.iam_role_name
   ec2_sg_id                 = module.security_group.ec2_sg_id
   public_subnet_ids         = module.vpc.public_subnet_ids
   private_subnet_ids        = []
@@ -48,7 +48,7 @@ module "ecr" {
 module "ecs" {
   source               = "../modules/ecs"
   app_name             = var.app_name
-  image_url            = var.image_url
+  image_url            = "${module.ecr.repository_url}:latest"
   alb_target_group_arn = module.alb.target_group_arn
   public_subnet_ids    = module.vpc.public_subnet_ids
   private_subnet_ids   = []

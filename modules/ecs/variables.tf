@@ -1,6 +1,8 @@
 variable "app_name" {}
-variable "image_url" {}
-
+variable "image_url" {
+  type        = string
+  description = "Full image URI including tag"
+}
 variable "alb_target_group_arn" {
   description = "ARN of the ALB target group"
   type        = string
