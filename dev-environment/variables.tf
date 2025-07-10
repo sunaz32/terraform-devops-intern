@@ -37,9 +37,10 @@ variable "key_name" {
   type        = string
 }
 
-variable "iam_instance_profile_name" {
-  description = "IAM instance profile name attached to ECS EC2 instances"
+variable "iam_role_name" {
+  description = "IAM role name to use for ECS EC2 instances"
   type        = string
+ 
 }
 
 variable "image_url" {
