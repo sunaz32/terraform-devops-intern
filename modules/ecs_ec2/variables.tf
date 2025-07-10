@@ -1,7 +1,7 @@
 variable "app_name" {}
 variable "instance_type" {}
 variable "key_name" {}
-variable "iam_instance_profile_name" {}
+
 variable "ec2_sg_id" {}
 variable "public_subnet_ids" {
   type = list(string)

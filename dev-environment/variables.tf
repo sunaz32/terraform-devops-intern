@@ -16,10 +16,12 @@ variable "public_subnet_cidrs" {
   description = "List of public subnet CIDR blocks"
   type        = list(string)
 }
+
 variable "private_subnet_cidrs" {
-  description = "List of private subnet CIDRs"
+  description = "List of public subnet CIDR blocks"
   type        = list(string)
 }
+
 variable "alb_domain" {
   description = "Domain name for the ALB"
   type        = string
@@ -35,18 +37,13 @@ variable "key_name" {
   type        = string
 }
 
-variable "iam_instance_profile_name" {
-  description = "IAM instance profile name attached to ECS EC2 instances"
-  type        = string
-}
+
 
 variable "image_url" {
-  description = "The image URL of the container to deploy"
+  description = "Full image URI with tag (e.g., :sha)"
   type        = string
-
 }
 variable "app_port" {
   description = "Port on which the application listens"
   type        = number
 }
-
