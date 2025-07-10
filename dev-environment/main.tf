@@ -47,7 +47,7 @@ module "ecr" {
 module "ecs" {
   source               = "../modules/ecs"
   app_name             = var.app_name
-  image_url            = "${module.ecr.repository_url}:latest"
+  image_url            = var.image_url
   alb_target_group_arn = module.alb.target_group_arn
   public_subnet_ids    = module.vpc.public_subnet_ids
   private_subnet_ids   = []

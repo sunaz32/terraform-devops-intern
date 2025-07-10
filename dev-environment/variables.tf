@@ -40,9 +40,8 @@ variable "key_name" {
 
 
 variable "image_url" {
-  description = "The image URL of the container to deploy"
+  description = "Full image URI with tag (e.g., :sha)"
   type        = string
-
 }
 variable "app_port" {
   description = "Port on which the application listens"

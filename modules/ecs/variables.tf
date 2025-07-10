@@ -1,7 +1,7 @@
 variable "app_name" {}
 variable "image_url" {
+  description = "Full image URI with tag (e.g., :sha)"
   type        = string
-  description = "Full image URI including tag"
 }
 variable "alb_target_group_arn" {
   description = "ARN of the ALB target group"
