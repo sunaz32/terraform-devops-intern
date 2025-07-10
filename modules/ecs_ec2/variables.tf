@@ -1,11 +1,7 @@
 variable "app_name" {}
 variable "instance_type" {}
 variable "key_name" {}
-variable "iam_role_name" {
-  description = "IAM role name to use for ECS EC2 instances"
-  type        = string
-  
-}
+
 variable "ec2_sg_id" {}
 variable "public_subnet_ids" {
   type = list(string)

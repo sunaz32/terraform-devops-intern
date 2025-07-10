@@ -2,11 +2,35 @@
 data "aws_ssm_parameter" "ecs_ami" {
   name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
 }
+resource "aws_iam_role" "ecs_instance_role" {
+  name = "ecsInstanceRole"
 
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = {
+    Name = "ecsInstanceRole"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_ec2_policy" {
+  role       = aws_iam_role.ecs_instance_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
 # IAM Instance Profile (wraps IAM Role)
 resource "aws_iam_instance_profile" "ecs_instance_profile" {
   name = "${var.app_name}-ecs-instance-profile"
-  role = var.iam_role_name  # Example: "ecsInstanceRole"
+  role = aws_iam_role.ecs_instance_role.name
 }
 
 # Launch Template for ECS EC2 instances
@@ -16,9 +40,9 @@ resource "aws_launch_template" "ecs_lt" {
   instance_type = var.instance_type
   key_name      = var.key_name
 
-  iam_instance_profile {
-    name = aws_iam_instance_profile.ecs_instance_profile.name  # ✅ Fixed here
-  }
+ iam_instance_profile {
+  name = aws_iam_instance_profile.ecs_instance_profile.name
+}
 
   user_data = base64encode(<<EOF
 #!/bin/bash

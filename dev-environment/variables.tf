@@ -37,11 +37,7 @@ variable "key_name" {
   type        = string
 }
 
-variable "iam_role_name" {
-  description = "IAM role name to use for ECS EC2 instances"
-  type        = string
 
-}
 
 variable "image_url" {
   description = "The image URL of the container to deploy"
