@@ -5,5 +5,4 @@
 crash.log
 
 # Ignore Terraform variable files
-terraform.tfvars
-*.auto.tfvars
+
