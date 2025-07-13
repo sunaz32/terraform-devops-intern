@@ -10,13 +10,13 @@ private_subnet_cidrs = ["10.20.101.0/24", "10.20.102.0/24"]
 alb_domain = "prod.naziya.visiontechguru.in"
 
 # Bastion Host (Prod)
-bastion_key_name      = "naz-prod1-key"
+bastion_key_name      = "Bastion-key"
 bastion_instance_type = "t2.micro"
 bastion_ami_id        = "" 
 
 # ECS EC2 Configuration
 instance_type             = "t3.micro"
-key_name                  = "naz-prod1-key"
+key_name                  = "naz-dev1-key"
 iam_instance_profile_name = "ecsInstanceRole-prod"
 
 # ECR / Docker Image for Prod
