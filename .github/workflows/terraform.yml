@@ -12,9 +12,9 @@ on:
         required: true
         type: string
       destroy:
-        required: false
+        required: true
         type: boolean
-        default: false
+        default: true
   workflow_dispatch:
     inputs:
       image_url:
@@ -31,9 +31,9 @@ on:
         type: string
       destroy:
         description: 'Set to true to destroy resources'
-        required: false
+        required: true
         type: boolean
-        default: false
+        default: true
  
 # Add permissions for OIDC token generation
 permissions:
