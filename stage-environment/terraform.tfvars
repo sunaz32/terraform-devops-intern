@@ -15,7 +15,7 @@ bastion_instance_type = "t2.micro"
 bastion_ami_id        = "" # ✅ Replace if using a custom AMI
 
 # ECS EC2 Configuration
-instance_type             = "t3.micro"
+instance_type             = "t2.medium"
 key_name                  = "naz-dev1-key"
 iam_instance_profile_name = "ecsInstanceRole-stage"
 
