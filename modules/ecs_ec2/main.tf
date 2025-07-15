@@ -3,7 +3,7 @@ data "aws_ssm_parameter" "ecs_ami" {
   name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
 }
 resource "aws_iam_role" "ecs_instance_role" {
-  name = "ecsInstanceRole-stage"
+  name = var.iam_instance_profile_name
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -16,13 +16,8 @@ resource "aws_iam_role" "ecs_instance_role" {
         Action = "sts:AssumeRole"
       }
     ]
-  })
-
-  tags = {
-    Name = "ecsInstanceRole-stage"
   }
-}
-
+  
 resource "aws_iam_role_policy_attachment" "ecs_ec2_policy" {
   role       = aws_iam_role.ecs_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
@@ -46,7 +41,7 @@ resource "aws_launch_template" "ecs_lt" {
 
   user_data = base64encode(<<EOF
 #!/bin/bash
-echo ECS_CLUSTER=${var.cluster_name} >> /etc/ecs/ecs.config
+,echo ECS_CLUSTER=${var.cluster_name} >> /etc/ecs/ecs.config
 EOF
   )
 
