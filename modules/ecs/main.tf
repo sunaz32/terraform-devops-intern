@@ -33,7 +33,7 @@ resource "aws_ecs_task_definition" "this" {
 resource "aws_ecs_service" "this" {
   name            = "${var.app_name}-service"
   cluster         = aws_ecs_cluster.this.id
-  task_definition = aws_ecs_task_definition.this.arn
+  task_definition = "${aws_ecs_task_definition.this.family}:${aws_ecs_task_definition.this.revision}"
   desired_count   = 1
   launch_type     = "EC2"
 
@@ -50,8 +50,7 @@ resource "aws_ecs_service" "this" {
 
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
-
-  force_new_deployment = true
+  force_new_deployment               = true
 }
 
 resource "aws_appautoscaling_target" "ecs_target" {
