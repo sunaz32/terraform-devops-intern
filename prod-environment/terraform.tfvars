@@ -12,7 +12,7 @@ alb_domain = "prod.naziya.visiontechguru.in"
 # Bastion Host (Prod)
 bastion_key_name      = "Bastion-key"
 bastion_instance_type = "t2.micro"
-bastion_ami_id        = "" 
+bastion_ami_id        = ""
 
 # ECS EC2 Configuration
 instance_type             = "t3.midium"
@@ -20,4 +20,4 @@ key_name                  = "naz-dev1-key"
 iam_instance_profile_name = "ecsInstanceRole-prod"
 
 # ECR / Docker Image for Prod
-image_url = "" 
+image_url = ""
