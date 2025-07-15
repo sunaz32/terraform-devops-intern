@@ -16,8 +16,9 @@ resource "aws_iam_role" "ecs_instance_role" {
         Action = "sts:AssumeRole"
       }
     ]
+   })
   }
-  
+
 resource "aws_iam_role_policy_attachment" "ecs_ec2_policy" {
   role       = aws_iam_role.ecs_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
