@@ -38,14 +38,14 @@ module "alb" {
 }
 
 module "ecs_ec2" {
-  source             = "../modules/ecs_ec2"
-  app_name           = var.app_name
-  instance_type      = var.instance_type
-  key_name           = var.key_name
-  ec2_sg_id          = module.security_group.ec2_sg_id
-  public_subnet_ids  = [] # Not using public subnets
-  private_subnet_ids = module.vpc.private_subnet_ids
-  cluster_name       = "${var.app_name}-cluster"
+  source                    = "../modules/ecs_ec2"
+  app_name                  = var.app_name
+  instance_type             = var.instance_type
+  key_name                  = var.key_name
+  ec2_sg_id                 = module.security_group.ec2_sg_id
+  public_subnet_ids         = [] # Not using public subnets
+  private_subnet_ids        = module.vpc.private_subnet_ids
+  cluster_name              = "${var.app_name}-cluster"
   iam_instance_profile_name = var.iam_instance_profile_name
 }
 
