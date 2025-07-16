@@ -7,7 +7,7 @@ resource "aws_ecs_task_definition" "this" {
   requires_compatibilities = ["EC2"]
   network_mode             = "awsvpc"
   cpu                      = "256"
-  memory                   = "512"
+  memory                   = "256"
 
   container_definitions = jsonencode([{
     name      = "app"
@@ -19,15 +19,20 @@ resource "aws_ecs_task_definition" "this" {
       protocol      = "tcp"
     }]
   }])
-   lifecycle {
+
+  lifecycle {
     create_before_destroy = true
+  }
+
+  tags = {
+    image_hash = md5(var.image_url)
   }
 }
 
 resource "aws_ecs_service" "this" {
   name            = "${var.app_name}-service"
   cluster         = aws_ecs_cluster.this.id
-  task_definition = aws_ecs_task_definition.this.arn
+  task_definition = "${aws_ecs_task_definition.this.family}:${aws_ecs_task_definition.this.revision}"
   desired_count   = 1
   launch_type     = "EC2"
 
@@ -38,15 +43,13 @@ resource "aws_ecs_service" "this" {
   }
 
   network_configuration {
-    subnets = length(var.private_subnet_ids) > 0 ? var.private_subnet_ids : var.public_subnet_ids
-
-    security_groups  = [var.ec2_sg_id]
+    subnets         = length(var.private_subnet_ids) > 0 ? var.private_subnet_ids : var.public_subnet_ids
+    security_groups = [var.ec2_sg_id]
   }
 
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
-
-   force_new_deployment = true
+  force_new_deployment               = true
 }
 
 resource "aws_appautoscaling_target" "ecs_target" {
