@@ -38,15 +38,15 @@ module "alb" {
 }
 
 module "ecs_ec2" {
-  source                    = "../modules/ecs_ec2"
-  app_name                  = var.app_name
-  instance_type             = var.instance_type
+  source             = "../modules/ecs_ec2"
+  app_name           = var.app_name
+  instance_type      = var.instance_type
+  key_name           = var.key_name
+  ec2_sg_id          = module.security_group.ec2_sg_id
+  public_subnet_ids  = [] # Not using public subnets
+  private_subnet_ids = module.vpc.private_subnet_ids
+  cluster_name       = "${var.app_name}-cluster"
   iam_instance_profile_name = var.iam_instance_profile_name
-  key_name                  = var.key_name
-  ec2_sg_id                 = module.security_group.ec2_sg_id
-  public_subnet_ids         = [] # Not using public subnets
-  private_subnet_ids        = module.vpc.private_subnet_ids
-  cluster_name              = "${var.app_name}-cluster"
 }
 
 module "ecr" {
@@ -59,7 +59,7 @@ module "ecs" {
   app_name             = var.app_name
   image_url            = var.image_url
   alb_target_group_arn = module.alb.target_group_arn
-  public_subnet_ids    = [] # Not used
+  public_subnet_ids    = []
   private_subnet_ids   = module.vpc.private_subnet_ids
   ec2_sg_id            = module.security_group.ec2_sg_id
 }

@@ -48,6 +48,7 @@ module "ecs_ec2" {
   cluster_name       = "${var.app_name}-cluster"
 }
 
+
 module "ecr" {
   source        = "../modules/ecr"
   ecr_repo_name = var.app_name
