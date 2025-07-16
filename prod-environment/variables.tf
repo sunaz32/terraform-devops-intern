@@ -27,7 +27,6 @@ variable "key_name" {
   description = "Key pair name for EC2 instances"
   type        = string
 }
-
 variable "bastion_key_name" {
   description = "Key pair name for EC2 instances"
   type        = string
@@ -62,3 +61,7 @@ variable "image_url" {
   description = "Docker image URL for ECS deployment"
   type        = string
 }
+
+
+
+
