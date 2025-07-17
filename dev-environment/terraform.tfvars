@@ -8,3 +8,4 @@ key_name             = "naz-dev1-key"
 app_port             = 5000
 image_url            = ""
 alb_domain           = "dev.naziya.visiontechguru.in"
+acm_certificate_arn  = "arn:aws:acm:ap-south-1:851725602228:certificate/ed85b026-7534-4053-89ef-35ee6d267184"

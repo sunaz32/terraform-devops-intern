@@ -48,3 +48,7 @@ variable "app_port" {
   type        = number
 }
 
+variable "acm_certificate_arn" {
+  description = "ACM Certificate ARN for SSL"
+  type        = string
+}
