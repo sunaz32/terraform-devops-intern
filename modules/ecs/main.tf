@@ -19,7 +19,16 @@ resource "aws_ecs_task_definition" "this" {
       protocol      = "tcp"
     }]
   }])
+  
+ lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = {
+    image_hash = md5(var.image_url) # Ensures new revision when image changes
+  }
 }
+
 
 resource "aws_ecs_service" "this" {
   name            = "${var.app_name}-service"
