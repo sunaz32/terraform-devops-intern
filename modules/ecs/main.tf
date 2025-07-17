@@ -51,6 +51,7 @@ resource "aws_ecs_service" "this" {
 
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
+  force_new_deployment               = true
 }
 
 resource "aws_appautoscaling_target" "ecs_target" {
