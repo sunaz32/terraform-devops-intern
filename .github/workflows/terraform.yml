@@ -31,9 +31,9 @@ on:
         type: string
       destroy:
         description: 'Set to true to destroy resources'
-        required: true
+        required: false
         type: boolean
-        default: true
+        default: false
  
 # Add permissions for OIDC token generation
 permissions:
