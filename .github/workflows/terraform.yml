@@ -7,11 +7,11 @@ on:
       - stage
       - prod
     paths:
-      - 'modules/**'                    # Shared modules
-      - 'dev-environment/**'           # Dev env config
-      - 'stage-environment/**'         # Stage env config
-      - 'prod-environment/**'          # Prod env config
-      - '.github/workflows/**'         # Workflow changes
+      - 'modules/**'
+      - 'dev-environment/**'
+      - 'stage-environment/**'
+      - 'prod-environment/**'
+      - '.github/workflows/**'
 
   workflow_dispatch:
     inputs:
@@ -61,25 +61,30 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "env_folder=${{ github.event.inputs.env_name }}-environment" >> $GITHUB_OUTPUT
+            echo "backend_key=${{ github.event.inputs.env_name }}/terraform.tfstate" >> $GITHUB_OUTPUT
             echo "image_url=${{ github.event.inputs.image_url }}" >> $GITHUB_OUTPUT
           else
             BRANCH_NAME="${GITHUB_REF##*/}"
             if [[ "$BRANCH_NAME" == "dev" ]]; then
               echo "env_folder=dev-environment" >> $GITHUB_OUTPUT
+              echo "backend_key=dev/terraform.tfstate" >> $GITHUB_OUTPUT
               echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
             elif [[ "$BRANCH_NAME" == "stage" ]]; then
               echo "env_folder=stage-environment" >> $GITHUB_OUTPUT
+              echo "backend_key=stage/terraform.tfstate" >> $GITHUB_OUTPUT
               echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
             elif [[ "$BRANCH_NAME" == "prod" ]]; then
               echo "env_folder=prod-environment" >> $GITHUB_OUTPUT
+              echo "backend_key=prod/terraform.tfstate" >> $GITHUB_OUTPUT
               echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
             else
-              echo "Unsupported branch: $BRANCH_NAME"; exit 1
+              echo "Unsupported branch: $BRANCH_NAME"
+              exit 1
             fi
           fi
 
       - name: Terraform Init
-        run: terraform init -backend-config="key=${{ steps.detect.outputs.env_folder }}/terraform.tfstate"
+        run: terraform init -backend-config="key=${{ steps.detect.outputs.backend_key }}"
         working-directory: ${{ steps.detect.outputs.env_folder }}
 
       - name: Terraform Format
