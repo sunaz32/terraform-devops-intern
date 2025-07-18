@@ -4,10 +4,10 @@ on:
   workflow_call:
     inputs:
       image_url:
-        required: false
+        required: true
         type: string
       target_branch:
-        required: false
+        required: true
         type: string
       env_name:
         required: true
@@ -20,11 +20,11 @@ on:
     inputs:
       image_url:
         description: 'Docker image URL'
-        required: false
+        required: true
         type: string
       target_branch:
         description: 'Target Git branch'
-        required: false
+        required: true
         type: string
       env_name:
         description: 'Environment name (dev, stage, prod)'
@@ -48,12 +48,12 @@ permissions:
 
 jobs:
   terraform:
-    name: Terraform ${{ inputs.destroy && 'Destroy' || 'Deploy' }} - ${{ inputs.env_name }}
+    name: Terraform ${{ inputs.destroy && 'Destroy' || 'Deploy' }} - ${{ inputs.env_name != '' && inputs.env_name || 'dev' }}
     runs-on: ubuntu-latest
     env:
-      TF_VAR_image_url: ${{ inputs.image_url || 'nginx:latest' }}
+      TF_VAR_image_url: ${{ inputs.image_url }}
       AWS_REGION: ap-south-1
-      ENV_FOLDER: ${{ inputs.env_name }}-environment
+      ENV_FOLDER: ${{ inputs.env_name != '' && format('{0}-environment', inputs.env_name) || 'dev-environment' }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -71,7 +71,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
-        run: terraform init -backend-config="key=${{ env.ENV_FOLDER }}/terraform.tfstate"
+        run: terraform init -backend-config="key=${{ inputs.env_name != '' && inputs.env_name || 'dev' }}/terraform.tfstate"
         working-directory: ${{ env.ENV_FOLDER }}
 
       - name: Terraform Format
@@ -83,15 +83,15 @@ jobs:
         working-directory: ${{ env.ENV_FOLDER }}
 
       - name: Terraform Plan
-        run: terraform plan -var-file="terraform.tfvars" -var="image_url=${{ env.TF_VAR_image_url }}"
+        run: terraform plan -var-file="terraform.tfvars" -var="image_url=${{ inputs.image_url }}"
         working-directory: ${{ env.ENV_FOLDER }}
 
       - name: Terraform Apply
         if: inputs.destroy == false
-        run: terraform apply -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ env.TF_VAR_image_url }}"
+        run: terraform apply -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ inputs.image_url }}"
         working-directory: ${{ env.ENV_FOLDER }}
 
       - name: Terraform Destroy
         if: inputs.destroy == true
-        run: terraform destroy -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ env.TF_VAR_image_url }}"
+        run: terraform destroy -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ inputs.image_url }}"
         working-directory: ${{ env.ENV_FOLDER }}
