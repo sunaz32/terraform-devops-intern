@@ -1,29 +1,21 @@
 name: Terraform CI/CD
 
 on:
-  workflow_call:
-    inputs:
-      image_url:
-        required: true
-        type: string
-      target_branch:
-        required: true
-        type: string
-      env_name:
-        required: true
-        type: string
-      destroy:
-        required: true
-        type: boolean
-        default: true
+  push:
+    branches:
+      - dev
+      - stage
+      - main  # for prod
+    paths:
+      - 'dev-environment/**'
+      - 'stage-environment/**'
+      - 'prod-environment/**'
+      - '.github/workflows/terraform.yml'
+
   workflow_dispatch:
     inputs:
       image_url:
-        description: 'Docker image URL'
-        required: true
-        type: string
-      target_branch:
-        description: 'Target Git branch'
+        description: 'Docker image URL (ECR full path with tag)'
         required: true
         type: string
       env_name:
@@ -31,16 +23,10 @@ on:
         required: true
         type: string
       destroy:
-        description: 'Set to true to destroy resources'
+        description: 'Set true to destroy resources'
         required: false
         type: boolean
         default: false
-  push:
-    branches:
-      - dev
-    paths:
-      - 'dev-environment/**'
-      - '.github/workflows/terraform.yml'
 
 permissions:
   id-token: write
@@ -48,14 +34,14 @@ permissions:
 
 jobs:
   terraform:
-    name: Terraform ${{ inputs.destroy && 'Destroy' || 'Deploy' }} - ${{ inputs.env_name != '' && inputs.env_name || 'dev' }}
+    name: Terraform CI/CD
     runs-on: ubuntu-latest
+
     env:
-      TF_VAR_image_url: ${{ inputs.image_url }}
       AWS_REGION: ap-south-1
-      ENV_FOLDER: ${{ inputs.env_name != '' && format('{0}-environment', inputs.env_name) || 'dev-environment' }}
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout Repo
         uses: actions/checkout@v3
 
       - name: Set up Terraform
@@ -70,28 +56,48 @@ jobs:
           role-session-name: terraform-session
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Set Environment Variables
+        id: setvars
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            BRANCH="${{ github.ref_name }}"
+            if [[ "$BRANCH" == "main" ]]; then
+              echo "env_name=prod" >> $GITHUB_OUTPUT
+            else
+              echo "env_name=$BRANCH" >> $GITHUB_OUTPUT
+            fi
+            echo "env_folder=${BRANCH}-environment" >> $GITHUB_OUTPUT
+            echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
+            echo "destroy=false" >> $GITHUB_OUTPUT
+          else
+            echo "env_name=${{ github.event.inputs.env_name }}" >> $GITHUB_OUTPUT
+            echo "env_folder=${{ github.event.inputs.env_name }}-environment" >> $GITHUB_OUTPUT
+            echo "image_url=${{ github.event.inputs.image_url }}" >> $GITHUB_OUTPUT
+            echo "destroy=${{ github.event.inputs.destroy }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Terraform Init
-        run: terraform init -backend-config="key=${{ inputs.env_name != '' && inputs.env_name || 'dev' }}/terraform.tfstate"
-        working-directory: ${{ env.ENV_FOLDER }}
+        run: terraform init -backend-config="key=${{ steps.setvars.outputs.env_name }}/terraform.tfstate"
+        working-directory: ${{ steps.setvars.outputs.env_folder }}
 
       - name: Terraform Format
         run: terraform fmt -check
-        working-directory: ${{ env.ENV_FOLDER }}
+        working-directory: ${{ steps.setvars.outputs.env_folder }}
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: ${{ env.ENV_FOLDER }}
+        working-directory: ${{ steps.setvars.outputs.env_folder }}
 
       - name: Terraform Plan
-        run: terraform plan -var-file="terraform.tfvars" -var="image_url=${{ inputs.image_url }}"
-        working-directory: ${{ env.ENV_FOLDER }}
+        run: terraform plan -var-file="terraform.tfvars" -var="image_url=${{ steps.setvars.outputs.image_url }}"
+        working-directory: ${{ steps.setvars.outputs.env_folder }}
 
       - name: Terraform Apply
-        if: inputs.destroy == false
-        run: terraform apply -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ inputs.image_url }}"
-        working-directory: ${{ env.ENV_FOLDER }}
+        if: ${{ steps.setvars.outputs.destroy == 'false' }}
+        run: terraform apply -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ steps.setvars.outputs.image_url }}"
+        working-directory: ${{ steps.setvars.outputs.env_folder }}
 
       - name: Terraform Destroy
-        if: inputs.destroy == true
-        run: terraform destroy -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ inputs.image_url }}"
-        working-directory: ${{ env.ENV_FOLDER }}
+        if: ${{ steps.setvars.outputs.destroy == 'true' }}
+        run: terraform destroy -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ steps.setvars.outputs.image_url }}"
+        working-directory: ${{ steps.setvars.outputs.env_folder }}
