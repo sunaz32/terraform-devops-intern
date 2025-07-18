@@ -1,29 +1,28 @@
-name: Terraform CI/CD
+name: Terraform CI/CD for All Environments
 
 on:
   push:
     branches:
       - dev
       - stage
-      - main  # for prod
+      - prod
     paths:
-      - 'dev-environment/**'
-      - 'stage-environment/**'
-      - 'prod-environment/**'
-      - '.github/workflows/terraform.yml'
+      - 'modules/**'                    # Shared modules
+      - 'dev-environment/**'           # Dev env config
+      - 'stage-environment/**'         # Stage env config
+      - 'prod-environment/**'          # Prod env config
+      - '.github/workflows/**'         # Workflow changes
 
   workflow_dispatch:
     inputs:
-      image_url:
-        description: 'Docker image URL (ECR full path with tag)'
-        required: true
-        type: string
       env_name:
-        description: 'Environment name (dev, stage, prod)'
+        description: "Environment (dev/stage/prod)"
         required: true
-        type: string
+      image_url:
+        description: "Docker Image URL"
+        required: true
       destroy:
-        description: 'Set true to destroy resources'
+        description: "Destroy infrastructure"
         required: false
         type: boolean
         default: false
@@ -32,16 +31,17 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  AWS_REGION: ap-south-1
+  AWS_ACCOUNT_ID: 851725602228
+
 jobs:
   terraform:
-    name: Terraform CI/CD
+    name: Deploy with Terraform
     runs-on: ubuntu-latest
 
-    env:
-      AWS_REGION: ap-south-1
-
     steps:
-      - name: Checkout Repo
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
       - name: Set up Terraform
@@ -49,55 +49,57 @@ jobs:
         with:
           terraform_version: 1.6.6
 
-      - name: Configure AWS Credentials (OIDC)
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::851725602228:role/Githubterraform-newrole
           role-session-name: terraform-session
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Set Environment Variables
-        id: setvars
+      - name: Detect Environment & Image
+        id: detect
         run: |
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            BRANCH="${{ github.ref_name }}"
-            if [[ "$BRANCH" == "main" ]]; then
-              echo "env_name=prod" >> $GITHUB_OUTPUT
-            else
-              echo "env_name=$BRANCH" >> $GITHUB_OUTPUT
-            fi
-            echo "env_folder=${BRANCH}-environment" >> $GITHUB_OUTPUT
-            echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
-            echo "destroy=false" >> $GITHUB_OUTPUT
-          else
-            echo "env_name=${{ github.event.inputs.env_name }}" >> $GITHUB_OUTPUT
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "env_folder=${{ github.event.inputs.env_name }}-environment" >> $GITHUB_OUTPUT
             echo "image_url=${{ github.event.inputs.image_url }}" >> $GITHUB_OUTPUT
-            echo "destroy=${{ github.event.inputs.destroy }}" >> $GITHUB_OUTPUT
+          else
+            BRANCH_NAME="${GITHUB_REF##*/}"
+            if [[ "$BRANCH_NAME" == "dev" ]]; then
+              echo "env_folder=dev-environment" >> $GITHUB_OUTPUT
+              echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
+            elif [[ "$BRANCH_NAME" == "stage" ]]; then
+              echo "env_folder=stage-environment" >> $GITHUB_OUTPUT
+              echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
+            elif [[ "$BRANCH_NAME" == "prod" ]]; then
+              echo "env_folder=prod-environment" >> $GITHUB_OUTPUT
+              echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
+            else
+              echo "Unsupported branch: $BRANCH_NAME"; exit 1
+            fi
           fi
 
       - name: Terraform Init
-        run: terraform init -backend-config="key=${{ steps.setvars.outputs.env_name }}/terraform.tfstate"
-        working-directory: ${{ steps.setvars.outputs.env_folder }}
+        run: terraform init -backend-config="key=${{ steps.detect.outputs.env_folder }}/terraform.tfstate"
+        working-directory: ${{ steps.detect.outputs.env_folder }}
 
       - name: Terraform Format
         run: terraform fmt -check
-        working-directory: ${{ steps.setvars.outputs.env_folder }}
+        working-directory: ${{ steps.detect.outputs.env_folder }}
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: ${{ steps.setvars.outputs.env_folder }}
+        working-directory: ${{ steps.detect.outputs.env_folder }}
 
       - name: Terraform Plan
-        run: terraform plan -var-file="terraform.tfvars" -var="image_url=${{ steps.setvars.outputs.image_url }}"
-        working-directory: ${{ steps.setvars.outputs.env_folder }}
+        run: terraform plan -var-file="terraform.tfvars" -var="image_url=${{ steps.detect.outputs.image_url }}"
+        working-directory: ${{ steps.detect.outputs.env_folder }}
 
       - name: Terraform Apply
-        if: ${{ steps.setvars.outputs.destroy == 'false' }}
-        run: terraform apply -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ steps.setvars.outputs.image_url }}"
-        working-directory: ${{ steps.setvars.outputs.env_folder }}
+        if: github.event_name == 'push' || github.event.inputs.destroy == 'false'
+        run: terraform apply -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ steps.detect.outputs.image_url }}"
+        working-directory: ${{ steps.detect.outputs.env_folder }}
 
       - name: Terraform Destroy
-        if: ${{ steps.setvars.outputs.destroy == 'true' }}
-        run: terraform destroy -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ steps.setvars.outputs.image_url }}"
-        working-directory: ${{ steps.setvars.outputs.env_folder }}
+        if: github.event.inputs.destroy == 'true'
+        run: terraform destroy -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ steps.detect.outputs.image_url }}"
+        working-directory: ${{ steps.detect.outputs.env_folder }}
