@@ -9,7 +9,3 @@ variable "alb_domain" {
   type        = string
 }
 
-variable "acm_certificate_arn" {
-  description = "ACM Certificate ARN for SSL"
-  type        = string
-}

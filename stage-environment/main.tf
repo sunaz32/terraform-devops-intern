@@ -37,6 +37,7 @@ module "alb" {
   alb_domain        = var.alb_domain
 }
 
+
 module "ecs_ec2" {
   source             = "../modules/ecs_ec2"
   app_name           = var.app_name
