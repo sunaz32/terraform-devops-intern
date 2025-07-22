@@ -29,12 +29,12 @@ module "bastion" {
 }
 
 module "alb" {
-  source              = "../modules/alb"
-  app_name            = var.app_name
-  vpc_id              = module.vpc.vpc_id
-  alb_sg_id           = module.security_group.alb_sg_id
-  public_subnet_ids   = module.vpc.public_subnet_ids
-  alb_domain          = var.alb_domain
+  source            = "../modules/alb"
+  app_name          = var.app_name
+  vpc_id            = module.vpc.vpc_id
+  alb_sg_id         = module.security_group.alb_sg_id
+  public_subnet_ids = module.vpc.public_subnet_ids
+  alb_domain        = var.alb_domain
 }
 
 module "ecs_ec2" {
