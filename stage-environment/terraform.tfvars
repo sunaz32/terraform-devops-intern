@@ -22,4 +22,4 @@ iam_instance_profile_name = "ecsInstanceRole-stage"
 # ECR / Docker Image for Stage
 image_url = ""
 
-acm_certificate_arn = "arn:aws:acm:ap-south-1:851725602228:certificate/362a99ce-28af-4d02-85f5-f9ea281a3ca7"
+
