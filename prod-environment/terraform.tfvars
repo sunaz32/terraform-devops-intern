@@ -15,7 +15,7 @@ bastion_instance_type = "t2.micro"
 bastion_ami_id        = ""
 
 # ECS EC2 Configuration
-instance_type             = "t2.small"
+instance_type             = "t2.micro"
 key_name                  = "naz-dev1-key"
 iam_instance_profile_name = "ecsInstanceRole-prod" # ✅ Create this if not already present
 

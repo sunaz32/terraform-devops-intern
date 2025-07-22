@@ -61,9 +61,9 @@ EOF
 # Auto Scaling Group for ECS
 resource "aws_autoscaling_group" "ecs_asg" {
   name                      = "${var.app_name}-ecs-asg"
-  desired_capacity          = 1
-  max_size                  = 2
-  min_size                  = 1
+  desired_capacity          = 2
+  max_size                  = 3
+  min_size                  = 2
   vpc_zone_identifier       = length(var.private_subnet_ids) > 0 ? var.private_subnet_ids : var.public_subnet_ids
   health_check_type         = "EC2"
 
