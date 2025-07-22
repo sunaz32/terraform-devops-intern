@@ -1,82 +1,110 @@
-name: Terraform CI/CD
+name: Terraform CI/CD for All Environments
+
 on:
-  workflow_call:
-    inputs:
-      image_url:
-        required: true
-        type: string
-      target_branch:
-        required: true
-        type: string
-      env_name:
-        required: true
-        type: string
-      destroy:
-        required: false
-        type: boolean
-        default: false
+  push:
+    branches:
+      - dev
+      - stage
+      - prod
+    paths:
+      - 'modules/**'
+      - 'dev-environment/**'
+      - 'stage-environment/**'
+      - 'prod-environment/**'
+      - '.github/workflows/**'
+
   workflow_dispatch:
     inputs:
-      image_url:
-        description: 'Docker image URL'
-        required: true
-        type: string
-      target_branch:
-        description: 'Target Git branch'
-        required: true
-        type: string
       env_name:
-        description: 'Environment name (dev, stage, prod)'
+        description: "Environment (dev/stage/prod)"
         required: true
-        type: string
+      image_url:
+        description: "Docker Image URL"
+        required: true
       destroy:
-        description: 'Set to true to destroy resources'
+        description: "Destroy infrastructure"
         required: false
         type: boolean
         default: false
- 
-# Add permissions for OIDC token generation
+
 permissions:
   id-token: write
   contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  AWS_ACCOUNT_ID: 851725602228
+
 jobs:
   terraform:
-    name: Terraform ${{ inputs.destroy && 'Destroy' || 'Deploy' }} - ${{ inputs.env_name }}
+    name: Deploy with Terraform
     runs-on: ubuntu-latest
-    env:
-      TF_VAR_image_url: ${{ inputs.image_url }}
-      AWS_REGION: ap-south-1
-      ENV_FOLDER: ${{ inputs.env_name }}-environment
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.6
-      - name: Configure AWS Credentials (OIDC)
+
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::851725602228:role/Githubterraform-newrole
           role-session-name: terraform-session
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Detect Environment & Image
+        id: detect
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "env_folder=${{ github.event.inputs.env_name }}-environment" >> $GITHUB_OUTPUT
+            echo "backend_key=${{ github.event.inputs.env_name }}/terraform.tfstate" >> $GITHUB_OUTPUT
+            echo "image_url=${{ github.event.inputs.image_url }}" >> $GITHUB_OUTPUT
+          else
+            BRANCH_NAME="${GITHUB_REF##*/}"
+            if [[ "$BRANCH_NAME" == "dev" ]]; then
+              echo "env_folder=dev-environment" >> $GITHUB_OUTPUT
+              echo "backend_key=dev/terraform.tfstate" >> $GITHUB_OUTPUT
+              echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
+            elif [[ "$BRANCH_NAME" == "stage" ]]; then
+              echo "env_folder=stage-environment" >> $GITHUB_OUTPUT
+              echo "backend_key=stage/terraform.tfstate" >> $GITHUB_OUTPUT
+              echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
+            elif [[ "$BRANCH_NAME" == "prod" ]]; then
+              echo "env_folder=prod-environment" >> $GITHUB_OUTPUT
+              echo "backend_key=prod/terraform.tfstate" >> $GITHUB_OUTPUT
+              echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
+            else
+              echo "Unsupported branch: $BRANCH_NAME"
+              exit 1
+            fi
+          fi
+
       - name: Terraform Init
-        run: terraform init -backend-config="key=${{ inputs.env_name }}/terraform.tfstate"
-        working-directory: ${{ env.ENV_FOLDER }}
+        run: terraform init -backend-config="key=${{ steps.detect.outputs.backend_key }}"
+        working-directory: ${{ steps.detect.outputs.env_folder }}
+
       - name: Terraform Format
         run: terraform fmt -check
-        working-directory: ${{ env.ENV_FOLDER }}
+        working-directory: ${{ steps.detect.outputs.env_folder }}
+
       - name: Terraform Validate
         run: terraform validate
-        working-directory: ${{ env.ENV_FOLDER }}
+        working-directory: ${{ steps.detect.outputs.env_folder }}
+
       - name: Terraform Plan
-        run: terraform plan -var-file="terraform.tfvars" -var="image_url=${{ inputs.image_url }}"
-        working-directory: ${{ env.ENV_FOLDER }}
+        run: terraform plan -var-file="terraform.tfvars" -var="image_url=${{ steps.detect.outputs.image_url }}"
+        working-directory: ${{ steps.detect.outputs.env_folder }}
+
       - name: Terraform Apply
-        if: inputs.destroy == false
-        run: terraform apply -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ inputs.image_url }}"
-        working-directory: ${{ env.ENV_FOLDER }}
+        if: github.event_name == 'push' || github.event.inputs.destroy == 'false'
+        run: terraform apply -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ steps.detect.outputs.image_url }}"
+        working-directory: ${{ steps.detect.outputs.env_folder }}
+
       - name: Terraform Destroy
-        if: inputs.destroy == true
-        run: terraform destroy -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ inputs.image_url }}"
-        working-directory: ${{ env.ENV_FOLDER }}
+        if: github.event.inputs.destroy == 'true'
+        run: terraform destroy -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ steps.detect.outputs.image_url }}"
+        working-directory: ${{ steps.detect.outputs.env_folder }}
