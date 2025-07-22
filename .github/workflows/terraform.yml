@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       env_name:
-        description: "Environment (dev/stage/main)"
+        description: "Environment (dev/stage/prod)"
         required: true
       image_url:
         description: "Docker Image URL"
@@ -73,7 +73,7 @@ jobs:
               echo "env_folder=stage-environment" >> $GITHUB_OUTPUT
               echo "backend_key=stage/terraform.tfstate" >> $GITHUB_OUTPUT
               echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
-            elif [[ "$BRANCH_NAME" == "prod" ]]; then
+            elif [[ "$BRANCH_NAME" == "main" ]]; then
               echo "env_folder=prod-environment" >> $GITHUB_OUTPUT
               echo "backend_key=prod/terraform.tfstate" >> $GITHUB_OUTPUT
               echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
