@@ -11,7 +11,7 @@ resource "aws_ecs_task_definition" "this" {
 
   container_definitions = jsonencode([{
     name      = "app"
-    image     = var.image_url
+    image     =  var.image_url != "" ? var.image_url : "851725602228.dkr.ecr.ap-south-1.amazonaws.com/naz-prod-intern-app:latest"
     essential = true
     portMappings = [{
       containerPort = 5000
