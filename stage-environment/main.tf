@@ -47,6 +47,7 @@ module "ecs_ec2" {
   public_subnet_ids  = [] # Not using public subnets
   private_subnet_ids = module.vpc.private_subnet_ids
   cluster_name       = "${var.app_name}-cluster"
+  iam_instance_profile_name = var.iam_instance_profile_name
 }
 
 

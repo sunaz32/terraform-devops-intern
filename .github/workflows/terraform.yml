@@ -68,15 +68,12 @@ jobs:
             if [[ "$BRANCH_NAME" == "dev" ]]; then
               echo "env_folder=dev-environment" >> $GITHUB_OUTPUT
               echo "backend_key=dev/terraform.tfstate" >> $GITHUB_OUTPUT
-              # echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
             elif [[ "$BRANCH_NAME" == "stage" ]]; then
               echo "env_folder=stage-environment" >> $GITHUB_OUTPUT
               echo "backend_key=stage/terraform.tfstate" >> $GITHUB_OUTPUT
-              # echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
             elif [[ "$BRANCH_NAME" == "main" ]]; then
               echo "env_folder=prod-environment" >> $GITHUB_OUTPUT
               echo "backend_key=prod/terraform.tfstate" >> $GITHUB_OUTPUT
-              # echo "image_url=amazon/amazon-ecs-sample" >> $GITHUB_OUTPUT
             else
               echo "Unsupported branch: $BRANCH_NAME"
               exit 1
