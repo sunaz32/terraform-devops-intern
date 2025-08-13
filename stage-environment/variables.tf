@@ -47,10 +47,6 @@ variable "instance_type" {
   type        = string
 }
 
-variable "iam_instance_profile_name" {
-  description = "IAM instance profile name for ECS EC2 instances"
-  type        = string
-}
 
 variable "alb_domain" {
   description = "Domain name to associate with the Application Load Balancer"
