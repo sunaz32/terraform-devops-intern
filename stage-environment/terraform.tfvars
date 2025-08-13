@@ -15,8 +15,8 @@ bastion_instance_type = "t2.micro"
 bastion_ami_id        = "" # ✅ Replace if using a custom AMI
 
 # ECS EC2 Configuration
-instance_type             = "t2.micro"
-key_name                  = "naz-dev1-key"
+instance_type = "t2.micro"
+key_name      = "naz-dev1-key"
 
 
 # ECR / Docker Image for Stage
