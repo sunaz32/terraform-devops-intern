@@ -23,9 +23,9 @@ on:
         required: true
       destroy:
         description: "Destroy infrastructure"
-        required: true
+        required: false
         type: boolean
-        default: true
+        default: false
 
 permissions:
   id-token: write
