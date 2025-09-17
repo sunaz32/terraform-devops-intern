@@ -1,10 +1,8 @@
-name: Terraform CI/CD for All Environments
+name: Terraform CI/CD for Multiple Environments
 
 on:
   push:
     branches:
-      - dev
-      - stage
       - main
     paths:
       - 'modules/**'
@@ -16,10 +14,10 @@ on:
   workflow_dispatch:
     inputs:
       env_name:
-        description: "Environment (dev/stage/prod)"
+        description: "Environment to deploy (dev, stage, prod)"
         required: true
       image_url:
-        description: "Docker Image URL"
+        description: "Docker image URL"
         required: true
       destroy:
         description: "Destroy infrastructure"
@@ -28,20 +26,18 @@ on:
         default: false
 
 permissions:
-  id-token: write
   contents: read
 
 env:
-  AWS_REGION: ap-south-1
-  AWS_ACCOUNT_ID: 851725602228
+  AWS_REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
   terraform:
-    name: Deploy with Terraform
+    name: Terraform Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Set up Terraform
@@ -52,36 +48,44 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::851725602228:role/Githubterraform-newrole
-          role-session-name: terraform-session
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Detect Environment & Image
+      - name: Detect Environment & Set Variables
         id: detect
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "env_folder=${{ github.event.inputs.env_name }}-environment" >> $GITHUB_OUTPUT
-            echo "backend_key=${{ github.event.inputs.env_name }}/terraform.tfstate" >> $GITHUB_OUTPUT
-            echo "image_url=${{ github.event.inputs.image_url }}" >> $GITHUB_OUTPUT
-          else
-            BRANCH_NAME="${GITHUB_REF##*/}"
-            if [[ "$BRANCH_NAME" == "dev" ]]; then
-              echo "env_folder=dev-environment" >> $GITHUB_OUTPUT
-              echo "backend_key=dev/terraform.tfstate" >> $GITHUB_OUTPUT
-            elif [[ "$BRANCH_NAME" == "stage" ]]; then
-              echo "env_folder=stage-environment" >> $GITHUB_OUTPUT
-              echo "backend_key=stage/terraform.tfstate" >> $GITHUB_OUTPUT
-            elif [[ "$BRANCH_NAME" == "main" ]]; then
-              echo "env_folder=prod-environment" >> $GITHUB_OUTPUT
-              echo "backend_key=prod/terraform.tfstate" >> $GITHUB_OUTPUT
-            else
-              echo "Unsupported branch: $BRANCH_NAME"
-              exit 1
-            fi
+          ENV_NAME="${{ github.event.inputs.env_name }}"
+          IMAGE_URL="${{ github.event.inputs.image_url }}"
+          DESTROY="${{ github.event.inputs.destroy }}"
+
+          if [[ "$ENV_NAME" != "dev" && "$ENV_NAME" != "stage" && "$ENV_NAME" != "prod" ]]; then
+            echo "Invalid environment: $ENV_NAME"
+            exit 1
+          fi
+
+          echo "env_folder=${ENV_NAME}-environment" >> $GITHUB_OUTPUT
+          echo "backend_key=${ENV_NAME}/terraform.tfstate" >> $GITHUB_OUTPUT
+          echo "image_url=$IMAGE_URL" >> $GITHUB_OUTPUT
+          echo "destroy=$DESTROY" >> $GITHUB_OUTPUT
+
+          if [[ "$ENV_NAME" == "dev" ]]; then
+            echo "bucket=${{ secrets.DEV_TF_STATE_BUCKET }}" >> $GITHUB_OUTPUT
+            echo "table=${{ secrets.DEV_TF_LOCK_TABLE }}" >> $GITHUB_OUTPUT
+          elif [[ "$ENV_NAME" == "stage" ]]; then
+            echo "bucket=${{ secrets.STAGE_TF_STATE_BUCKET }}" >> $GITHUB_OUTPUT
+            echo "table=${{ secrets.STAGE_TF_LOCK_TABLE }}" >> $GITHUB_OUTPUT
+          elif [[ "$ENV_NAME" == "prod" ]]; then
+            echo "bucket=${{ secrets.PROD_TF_STATE_BUCKET }}" >> $GITHUB_OUTPUT
+            echo "table=${{ secrets.PROD_TF_LOCK_TABLE }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Terraform Init
-        run: terraform init -backend-config="key=${{ steps.detect.outputs.backend_key }}"
+        run: terraform init -backend-config="bucket=${{ steps.detect.outputs.bucket }}" \
+                             -backend-config="key=${{ steps.detect.outputs.backend_key }}" \
+                             -backend-config="region=${{ env.AWS_REGION }}" \
+                             -backend-config="dynamodb_table=${{ steps.detect.outputs.table }}" \
+                             -backend-config="encrypt=true"
         working-directory: ${{ steps.detect.outputs.env_folder }}
 
       - name: Terraform Format
@@ -97,11 +101,11 @@ jobs:
         working-directory: ${{ steps.detect.outputs.env_folder }}
 
       - name: Terraform Apply
-        if: github.event_name == 'push' || github.event.inputs.destroy == 'false'
+        if: ${{ steps.detect.outputs.destroy == 'false' }}
         run: terraform apply -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ steps.detect.outputs.image_url }}"
         working-directory: ${{ steps.detect.outputs.env_folder }}
 
       - name: Terraform Destroy
-        if: github.event.inputs.destroy == 'true'
+        if: ${{ steps.detect.outputs.destroy == 'true' }}
         run: terraform destroy -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ steps.detect.outputs.image_url }}"
         working-directory: ${{ steps.detect.outputs.env_folder }}

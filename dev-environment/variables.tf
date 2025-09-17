@@ -47,3 +47,8 @@ variable "app_port" {
   description = "Port on which the application listens"
   type        = number
 }
+
+variable "iam_instance_profile_name" {
+  description = "The name of the IAM instance profile to attach to EC2 instances"
+  type        = string
+}
