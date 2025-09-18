@@ -75,11 +75,7 @@ jobs:
           fi
 
       - name: Terraform Init
-        run: terraform -chdir=${{ steps.detect.outputs.env_folder }} init \
-              -backend-config="bucket=${{ steps.detect.outputs.bucket }}" \
-              -backend-config="dynamodb_table=${{ steps.detect.outputs.table }}" \
-              -backend-config="key=${{ steps.detect.outputs.backend_key }}" \
-              -backend-config="region=${{ secrets.AWS_REGION }}"
+        run: terraform -chdir=${{ steps.detect.outputs.env_folder }} init -backend-config="bucket=${{ steps.detect.outputs.bucket }}" -backend-config="dynamodb_table=${{ steps.detect.outputs.table }}" -backend-config="key=${{ steps.detect.outputs.backend_key }}" -backend-config="region=${{ secrets.AWS_REGION }}"
 
       - name: Terraform Validate
         run: terraform -chdir=${{ steps.detect.outputs.env_folder }} validate
