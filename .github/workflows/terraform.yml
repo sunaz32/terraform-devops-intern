@@ -3,7 +3,9 @@ name: Terraform CI/CD for Multiple Environments
 on:
   push:
     branches:
-      - main
+      - dev
+      - stage
+      - prod
     paths:
       - 'modules/**'
       - 'dev-environment/**'
@@ -17,8 +19,8 @@ on:
         description: "Environment to deploy (dev, stage, prod)"
         required: true
       image_url:
-        description: "Docker image URL (only for app deployment)"
-        required: false
+        description: "Docker image URL"
+        required: true
       destroy:
         description: "Destroy infrastructure"
         required: false
@@ -55,25 +57,21 @@ jobs:
       - name: Detect Environment & Set Variables
         id: detect
         run: |
-          # 1. If manual trigger -> take inputs
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          # Handle both push and workflow_dispatch
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            BRANCH="${GITHUB_REF##*/}"
+            ENV_NAME="$BRANCH"
+            IMAGE_URL=""
+            DESTROY="false"
+          else
             ENV_NAME="${{ github.event.inputs.env_name }}"
             IMAGE_URL="${{ github.event.inputs.image_url }}"
             DESTROY="${{ github.event.inputs.destroy }}"
-          else
-            # 2. If push -> detect environment based on changed files
-            if git diff --name-only ${{ github.sha }}^ ${{ github.sha }} | grep -q "^dev-environment/"; then
-              ENV_NAME="dev"
-            elif git diff --name-only ${{ github.sha }}^ ${{ github.sha }} | grep -q "^stage-environment/"; then
-              ENV_NAME="stage"
-            elif git diff --name-only ${{ github.sha }}^ ${{ github.sha }} | grep -q "^prod-environment/"; then
-              ENV_NAME="prod"
-            else
-              echo "No environment-specific changes detected."
-              exit 0
-            fi
-            IMAGE_URL=""
-            DESTROY="false"
+          fi
+
+          if [[ "$ENV_NAME" != "dev" && "$ENV_NAME" != "stage" && "$ENV_NAME" != "prod" ]]; then
+            echo "Invalid environment: $ENV_NAME"
+            exit 1
           fi
 
           echo "env_folder=${ENV_NAME}-environment" >> $GITHUB_OUTPUT
@@ -93,11 +91,12 @@ jobs:
           fi
 
       - name: Terraform Init
-        run: terraform init -backend-config="bucket=${{ steps.detect.outputs.bucket }}" \
-                             -backend-config="key=${{ steps.detect.outputs.backend_key }}" \
-                             -backend-config="region=${{ env.AWS_REGION }}" \
-                             -backend-config="dynamodb_table=${{ steps.detect.outputs.table }}" \
-                             -backend-config="encrypt=true"
+        run: terraform init \
+              -backend-config="bucket=${{ steps.detect.outputs.bucket }}" \
+              -backend-config="key=${{ steps.detect.outputs.backend_key }}" \
+              -backend-config="region=${{ env.AWS_REGION }}" \
+              -backend-config="dynamodb_table=${{ steps.detect.outputs.table }}" \
+              -backend-config="encrypt=true"
         working-directory: ${{ steps.detect.outputs.env_folder }}
 
       - name: Terraform Format
