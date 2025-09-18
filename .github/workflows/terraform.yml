@@ -3,9 +3,7 @@ name: Terraform CI/CD for Multiple Environments
 on:
   push:
     branches:
-      - dev
-      - stage
-      - prod
+      - main
     paths:
       - 'modules/**'
       - 'dev-environment/**'
