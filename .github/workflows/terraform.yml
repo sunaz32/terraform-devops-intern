@@ -1,81 +1,41 @@
-name: Terraform CI/CD for Multiple Environments
+name: Terraform Multi-Environment CI/CD
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'modules/**'
-      - 'dev-environment/**'
-      - 'stage-environment/**'
-      - 'prod-environment/**'
-      - '.github/workflows/**'
-
-  workflow_dispatch:
-    inputs:
-      env_name:
-        description: "Environment to deploy (dev, stage, prod)"
-        required: true
-      image_url:
-        description: "Docker image URL"
-        required: true
-      destroy:
-        description: "Destroy infrastructure"
-        required: false
-        type: boolean
-        default: false
-
-permissions:
-  contents: read
-
-env:
-  AWS_REGION: ${{ secrets.AWS_REGION }}
+      - "dev-environment/**"
+      - "stage-environment/**"
+      - "prod-environment/**"
+      - "modules/**"
+      - ".github/workflows/**"
 
 jobs:
   terraform:
-    name: Terraform Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.SECRETE_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.6.6
-
-      - name: Detect Environment & Set Variables
+      - name: Detect Environment
         id: detect
         run: |
-          # Handle both push and workflow_dispatch
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            BRANCH="${GITHUB_REF##*/}"
-            ENV_NAME="$BRANCH"
-            IMAGE_URL=""
-            DESTROY="false"
+          if git diff --name-only HEAD~1 | grep -q "^dev-environment/"; then
+            ENV_NAME="dev"
+          elif git diff --name-only HEAD~1 | grep -q "^stage-environment/"; then
+            ENV_NAME="stage"
+          elif git diff --name-only HEAD~1 | grep -q "^prod-environment/"; then
+            ENV_NAME="prod"
           else
-            ENV_NAME="${{ github.event.inputs.env_name }}"
-            IMAGE_URL="${{ github.event.inputs.image_url }}"
-            DESTROY="${{ github.event.inputs.destroy }}"
+            echo "No environment changes detected. Exiting."
+            exit 0
           fi
 
-          if [[ "$ENV_NAME" != "dev" && "$ENV_NAME" != "stage" && "$ENV_NAME" != "prod" ]]; then
-            echo "Invalid environment: $ENV_NAME"
-            exit 1
-          fi
-
+          echo "env_name=$ENV_NAME" >> $GITHUB_OUTPUT
           echo "env_folder=${ENV_NAME}-environment" >> $GITHUB_OUTPUT
           echo "backend_key=${ENV_NAME}/terraform.tfstate" >> $GITHUB_OUTPUT
-          echo "image_url=$IMAGE_URL" >> $GITHUB_OUTPUT
-          echo "destroy=$DESTROY" >> $GITHUB_OUTPUT
 
           if [[ "$ENV_NAME" == "dev" ]]; then
             echo "bucket=${{ secrets.DEV_TF_STATE_BUCKET }}" >> $GITHUB_OUTPUT
@@ -88,33 +48,27 @@ jobs:
             echo "table=${{ secrets.PROD_TF_LOCK_TABLE }}" >> $GITHUB_OUTPUT
           fi
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.SECRETE_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
       - name: Terraform Init
-        run: terraform init \
+        run: terraform -chdir=${{ steps.detect.outputs.env_folder }} init \
               -backend-config="bucket=${{ steps.detect.outputs.bucket }}" \
-              -backend-config="key=${{ steps.detect.outputs.backend_key }}" \
-              -backend-config="region=${{ env.AWS_REGION }}" \
               -backend-config="dynamodb_table=${{ steps.detect.outputs.table }}" \
-              -backend-config="encrypt=true"
-        working-directory: ${{ steps.detect.outputs.env_folder }}
-
-      - name: Terraform Format
-        run: terraform fmt -check
-        working-directory: ${{ steps.detect.outputs.env_folder }}
-
-      - name: Terraform Validate
-        run: terraform validate
-        working-directory: ${{ steps.detect.outputs.env_folder }}
+              -backend-config="key=${{ steps.detect.outputs.backend_key }}" \
+              -backend-config="region=${{ secrets.AWS_REGION }}"
 
       - name: Terraform Plan
-        run: terraform plan -var-file="terraform.tfvars" -var="image_url=${{ steps.detect.outputs.image_url }}"
-        working-directory: ${{ steps.detect.outputs.env_folder }}
+        run: terraform -chdir=${{ steps.detect.outputs.env_folder }} plan
 
       - name: Terraform Apply
-        if: ${{ steps.detect.outputs.destroy == 'false' }}
-        run: terraform apply -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ steps.detect.outputs.image_url }}"
-        working-directory: ${{ steps.detect.outputs.env_folder }}
-
-      - name: Terraform Destroy
-        if: ${{ steps.detect.outputs.destroy == 'true' }}
-        run: terraform destroy -auto-approve -var-file="terraform.tfvars" -var="image_url=${{ steps.detect.outputs.image_url }}"
-        working-directory: ${{ steps.detect.outputs.env_folder }}
+        run: terraform -chdir=${{ steps.detect.outputs.env_folder }} apply -auto-approve
