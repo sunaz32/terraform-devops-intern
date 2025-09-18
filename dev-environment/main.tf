@@ -36,11 +36,7 @@ module "ecs_ec2" {
   public_subnet_ids  = module.vpc.public_subnet_ids
   private_subnet_ids = []
   cluster_name       = "${var.app_name}-cluster"
-}
-
-module "ecr" {
-  source        = "../modules/ecr"
-  ecr_repo_name = var.app_name
+  iam_instance_profile_name = var.iam_instance_profile_name
 }
 
 
