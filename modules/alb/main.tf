@@ -39,17 +39,4 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-# HTTPS Listener with ACM Certificate
-resource "aws_lb_listener" "https" {
-  load_balancer_arn = aws_lb.this.arn
-  port              = 443
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn = "arn:aws:acm:ap-south-1:851725602228:certificate/cc215228-6410-4951-b2ba-fba97b63e07e"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.this.arn
-  }
-}
 
