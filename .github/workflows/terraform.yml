@@ -16,55 +16,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repo
+      # 1️⃣ Checkout repository
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # Detect Environment based on changed folder
+      # 2️⃣ Detect which environment folder changed
       - name: Detect Environment
         id: detect
         run: |
+          # If first commit (no HEAD~1), use all files
           if [[ $(git rev-parse --verify HEAD~1 2>/dev/null) ]]; then
             DIFF_FILES=$(git diff --name-only HEAD~1)
           else
             DIFF_FILES=$(git ls-files)
           fi
 
-          echo "Changed files:"
-          echo "$DIFF_FILES"
-
-          TOP_FOLDERS=$(echo "$DIFF_FILES" | cut -d'/' -f1 | sort -u)
-          ENV_NAME=""
-
-          for folder in $TOP_FOLDERS; do
-            case "$folder" in
-              dev-environment) ENV_NAME="dev" ;;
-              stage-environment) ENV_NAME="stage" ;;
-              prod-environment) ENV_NAME="prod" ;;
-            esac
-          done
-
-          if [[ -z "$ENV_NAME" ]]; then
+          if echo "$DIFF_FILES" | grep -q "^dev-environment/"; then
+            ENV_NAME="dev"
+          elif echo "$DIFF_FILES" | grep -q "^stage-environment/"; then
+            ENV_NAME="stage"
+          elif echo "$DIFF_FILES" | grep -q "^prod-environment/"; then
+            ENV_NAME="prod"
+          else
             echo "No environment changes detected. Exiting."
             exit 0
           fi
 
           echo "env_name=$ENV_NAME" >> $GITHUB_OUTPUT
           echo "env_folder=${ENV_NAME}-environment" >> $GITHUB_OUTPUT
-          echo "backend_key=${ENV_NAME}/terraform.tfstate" >> $GITHUB_OUTPUT
 
-          if [[ "$ENV_NAME" == "dev" ]]; then
-            echo "bucket=${{ secrets.DEV_TF_STATE_BUCKET }}" >> $GITHUB_OUTPUT
-            echo "table=${{ secrets.DEV_TF_LOCK_TABLE }}" >> $GITHUB_OUTPUT
-          elif [[ "$ENV_NAME" == "stage" ]]; then
-            echo "bucket=${{ secrets.STAGE_TF_STATE_BUCKET }}" >> $GITHUB_OUTPUT
-            echo "table=${{ secrets.STAGE_TF_LOCK_TABLE }}" >> $GITHUB_OUTPUT
-          elif [[ "$ENV_NAME" == "prod" ]]; then
-            echo "bucket=${{ secrets.PROD_TF_STATE_BUCKET }}" >> $GITHUB_OUTPUT
-            echo "table=${{ secrets.PROD_TF_LOCK_TABLE }}" >> $GITHUB_OUTPUT
-          fi
-
-      # Configure AWS credentials (personal account)
+      # 3️⃣ Configure AWS Credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -72,37 +53,24 @@ jobs:
           aws-secret-access-key: ${{ secrets.SECRETE_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Setup Terraform
+      # 4️⃣ Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.7.5
 
-      # Check that env_folder is set
-      - name: Check env_folder
-        run: |
-          if [[ -z "${{ steps.detect.outputs.env_folder }}" ]]; then
-            echo "No environment folder detected. Exiting."
-            exit 0
-          fi
-
-      # Terraform Init (multi-line with correct \ handling)
+      # 5️⃣ Terraform Init
       - name: Terraform Init
-        run: |
-          terraform -chdir=${{ steps.detect.outputs.env_folder }} init \
-            -backend-config="bucket=${{ steps.detect.outputs.bucket }}" \
-            -backend-config="dynamodb_table=${{ steps.detect.outputs.table }}" \
-            -backend-config="key=${{ steps.detect.outputs.backend_key }}" \
-            -backend-config="region=${{ secrets.AWS_REGION }}"
+        run: terraform -chdir=${{ steps.detect.outputs.env_folder }} init
 
-      # Terraform Validate
+      # 6️⃣ Terraform Validate
       - name: Terraform Validate
         run: terraform -chdir=${{ steps.detect.outputs.env_folder }} validate
 
-      # Terraform Plan
+      # 7️⃣ Terraform Plan
       - name: Terraform Plan
         run: terraform -chdir=${{ steps.detect.outputs.env_folder }} plan
 
-      # Terraform Apply
+      # 8️⃣ Terraform Apply
       - name: Terraform Apply
         run: terraform -chdir=${{ steps.detect.outputs.env_folder }} apply -auto-approve
