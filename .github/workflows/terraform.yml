@@ -16,15 +16,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
+      # Checkout repo
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # Detect environment based on changed folder
+      # Detect Environment based on changed folder
       - name: Detect Environment
         id: detect
         run: |
-          # Get changed files between HEAD and previous commit (handles first commit)
           if [[ $(git rev-parse --verify HEAD~1 2>/dev/null) ]]; then
             DIFF_FILES=$(git diff --name-only HEAD~1)
           else
@@ -34,10 +33,7 @@ jobs:
           echo "Changed files:"
           echo "$DIFF_FILES"
 
-          # Extract top-level folder names
           TOP_FOLDERS=$(echo "$DIFF_FILES" | cut -d'/' -f1 | sort -u)
-
-          # Initialize ENV_NAME
           ENV_NAME=""
 
           for folder in $TOP_FOLDERS; do
@@ -53,7 +49,6 @@ jobs:
             exit 0
           fi
 
-          # Set outputs for later steps
           echo "env_name=$ENV_NAME" >> $GITHUB_OUTPUT
           echo "env_folder=${ENV_NAME}-environment" >> $GITHUB_OUTPUT
           echo "backend_key=${ENV_NAME}/terraform.tfstate" >> $GITHUB_OUTPUT
@@ -83,7 +78,7 @@ jobs:
         with:
           terraform_version: 1.7.5
 
-      # Ensure env folder exists
+      # Check that env_folder is set
       - name: Check env_folder
         run: |
           if [[ -z "${{ steps.detect.outputs.env_folder }}" ]]; then
@@ -91,22 +86,23 @@ jobs:
             exit 0
           fi
 
-      # Initialize Terraform backend
+      # Terraform Init (multi-line with correct \ handling)
       - name: Terraform Init
-        run: terraform -chdir=${{ steps.detect.outputs.env_folder }} init \
-              -backend-config="bucket=${{ steps.detect.outputs.bucket }}" \
-              -backend-config="dynamodb_table=${{ steps.detect.outputs.table }}" \
-              -backend-config="key=${{ steps.detect.outputs.backend_key }}" \
-              -backend-config="region=${{ secrets.AWS_REGION }}"
+        run: |
+          terraform -chdir=${{ steps.detect.outputs.env_folder }} init \
+            -backend-config="bucket=${{ steps.detect.outputs.bucket }}" \
+            -backend-config="dynamodb_table=${{ steps.detect.outputs.table }}" \
+            -backend-config="key=${{ steps.detect.outputs.backend_key }}" \
+            -backend-config="region=${{ secrets.AWS_REGION }}"
 
-      # Validate Terraform files
+      # Terraform Validate
       - name: Terraform Validate
         run: terraform -chdir=${{ steps.detect.outputs.env_folder }} validate
 
-      # Terraform plan
+      # Terraform Plan
       - name: Terraform Plan
         run: terraform -chdir=${{ steps.detect.outputs.env_folder }} plan
 
-      # Terraform apply
+      # Terraform Apply
       - name: Terraform Apply
         run: terraform -chdir=${{ steps.detect.outputs.env_folder }} apply -auto-approve
