@@ -7,7 +7,7 @@ public_subnet_cidrs  = ["10.10.1.0/24", "10.10.2.0/24"]
 private_subnet_cidrs = ["10.10.101.0/24", "10.10.102.0/24"]
 
 # ALB Domain for Stage
-alb_domain = "stage.naziya.visiontechguru.in"
+alb_domain = "stage.naziya.learn.cloudshastrainfotech.com"
 
 # Bastion Host (Stage)t2.small
 bastion_key_name      = "Bastion-key"
