@@ -9,14 +9,14 @@ private_subnet_cidrs = ["10.10.101.0/24", "10.10.102.0/24"]
 # ALB Domain for Stage
 alb_domain = "stage.naziya.visiontechguru.in"
 
-# Bastion Host (Stage)
+# Bastion Host (Stage)t2.small
 bastion_key_name      = "Bastion-key"
-bastion_instance_type = "t2.micro"
+bastion_instance_type = "t2.small"
 bastion_ami_id        = "" # ✅ Replace if using a custom AMI
 
 # ECS EC2 Configuration
-instance_type             = "t3.micro"
-key_name                  = "naz-dev1-key"
+instance_type             = "t2.small"
+key_name                  = "project-key"
 iam_instance_profile_name = "ecsInstanceRole-stage"
 
 # ECR / Docker Image for Stage
