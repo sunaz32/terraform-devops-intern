@@ -16,30 +16,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout repository
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      # Detect environment based on changed folder
       - name: Detect Environment
         id: detect
         run: |
-          # Handle first commit / initial push
+          # Get changed files between HEAD and previous commit (handles first commit)
           if [[ $(git rev-parse --verify HEAD~1 2>/dev/null) ]]; then
             DIFF_FILES=$(git diff --name-only HEAD~1)
           else
             DIFF_FILES=$(git ls-files)
           fi
 
-          if echo "$DIFF_FILES" | grep -q "^dev-environment/"; then
-            ENV_NAME="dev"
-          elif echo "$DIFF_FILES" | grep -q "^stage-environment/"; then
-            ENV_NAME="stage"
-          elif echo "$DIFF_FILES" | grep -q "^prod-environment/"; then
-            ENV_NAME="prod"
-          else
+          echo "Changed files:"
+          echo "$DIFF_FILES"
+
+          # Extract top-level folder names
+          TOP_FOLDERS=$(echo "$DIFF_FILES" | cut -d'/' -f1 | sort -u)
+
+          # Initialize ENV_NAME
+          ENV_NAME=""
+
+          for folder in $TOP_FOLDERS; do
+            case "$folder" in
+              dev-environment) ENV_NAME="dev" ;;
+              stage-environment) ENV_NAME="stage" ;;
+              prod-environment) ENV_NAME="prod" ;;
+            esac
+          done
+
+          if [[ -z "$ENV_NAME" ]]; then
             echo "No environment changes detected. Exiting."
             exit 0
           fi
 
+          # Set outputs for later steps
           echo "env_name=$ENV_NAME" >> $GITHUB_OUTPUT
           echo "env_folder=${ENV_NAME}-environment" >> $GITHUB_OUTPUT
           echo "backend_key=${ENV_NAME}/terraform.tfstate" >> $GITHUB_OUTPUT
@@ -55,6 +69,7 @@ jobs:
             echo "table=${{ secrets.PROD_TF_LOCK_TABLE }}" >> $GITHUB_OUTPUT
           fi
 
+      # Configure AWS credentials (personal account)
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -62,11 +77,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.SECRETE_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.7.5
 
+      # Ensure env folder exists
       - name: Check env_folder
         run: |
           if [[ -z "${{ steps.detect.outputs.env_folder }}" ]]; then
@@ -74,14 +91,22 @@ jobs:
             exit 0
           fi
 
+      # Initialize Terraform backend
       - name: Terraform Init
-        run: terraform -chdir=${{ steps.detect.outputs.env_folder }} init -backend-config="bucket=${{ steps.detect.outputs.bucket }}" -backend-config="dynamodb_table=${{ steps.detect.outputs.table }}" -backend-config="key=${{ steps.detect.outputs.backend_key }}" -backend-config="region=${{ secrets.AWS_REGION }}"
+        run: terraform -chdir=${{ steps.detect.outputs.env_folder }} init \
+              -backend-config="bucket=${{ steps.detect.outputs.bucket }}" \
+              -backend-config="dynamodb_table=${{ steps.detect.outputs.table }}" \
+              -backend-config="key=${{ steps.detect.outputs.backend_key }}" \
+              -backend-config="region=${{ secrets.AWS_REGION }}"
 
+      # Validate Terraform files
       - name: Terraform Validate
         run: terraform -chdir=${{ steps.detect.outputs.env_folder }} validate
 
+      # Terraform plan
       - name: Terraform Plan
         run: terraform -chdir=${{ steps.detect.outputs.env_folder }} plan
 
+      # Terraform apply
       - name: Terraform Apply
         run: terraform -chdir=${{ steps.detect.outputs.env_folder }} apply -auto-approve
