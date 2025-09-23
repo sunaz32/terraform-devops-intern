@@ -24,7 +24,7 @@ resource "aws_lb_target_group" "this" {
 
 # HTTPS Listener (with SSL cert)
 resource "aws_lb_listener" "https" {
-  load_balancer_arn = aws_lb.app_alb.arn
+  load_balancer_arn = aws_lb.this.arn   # corrected reference
   port              = "443"
   protocol          = "HTTPS"
 
@@ -33,9 +33,10 @@ resource "aws_lb_listener" "https" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.app_tg.arn
+    target_group_arn = aws_lb_target_group.this.arn   # corrected reference
   }
 }
+
 
 
 
