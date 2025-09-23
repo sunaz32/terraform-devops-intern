@@ -49,10 +49,6 @@ module "ecs_ec2" {
   iam_instance_profile_name = var.iam_instance_profile_name
 }
 
-module "ecr" {
-  source        = "../modules/ecr"
-  ecr_repo_name = var.app_name
-}
 
 module "ecs" {
   source               = "../modules/ecs"
