@@ -7,5 +7,5 @@ instance_type        = "t3.micro"
 key_name             = "project-key"
 app_port             = 5000
 image_url            = ""
-alb_domain           = "dev.naziya.visiontechguru.in"
+alb_domain           = "dev.naziya.learn.cloudshastrainfotech.com"
 iam_instance_profile_name = "ecsInstanceRole"
