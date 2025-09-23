@@ -24,12 +24,8 @@ jobs:
       - name: Detect Environment
         id: detect
         run: |
-          # If first commit (no HEAD~1), use all files
-          if [[ $(git rev-parse --verify HEAD~1 2>/dev/null) ]]; then
-            DIFF_FILES=$(git diff --name-only HEAD~1)
-          else
-            DIFF_FILES=$(git ls-files)
-          fi
+          # Compare all commits in this push, not just the last commit
+          DIFF_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
 
           if echo "$DIFF_FILES" | grep -q "^dev-environment/"; then
             ENV_NAME="dev"
@@ -38,7 +34,7 @@ jobs:
           elif echo "$DIFF_FILES" | grep -q "^prod-environment/"; then
             ENV_NAME="prod"
           else
-            echo "No environment changes detected. Exiting."
+            echo "No environment folder changes detected. Exiting."
             exit 0
           fi
 
