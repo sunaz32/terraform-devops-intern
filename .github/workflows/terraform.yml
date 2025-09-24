@@ -27,55 +27,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repository with full history
+      # 1️⃣ Checkout repo
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0   # important! ensures we have full history
+          fetch-depth: 0
 
-      # 2️⃣ Detect which environment folder changed or use manual input
+      # 2️⃣ Detect Environment
       - name: Detect Environment
         id: detect
         run: |
-          set -e
-
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             ENV_NAME="${{ github.event.inputs.environment }}"
-            echo "Manual trigger detected. Using environment: $ENV_NAME"
-            echo "env_name=$ENV_NAME" >> $GITHUB_OUTPUT
-            echo "env_folder=${ENV_NAME}-environment" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Try to diff between before and sha
-          if git rev-parse ${{ github.event.before }} >/dev/null 2>&1; then
+          else
+            # Check all files changed in this push
             DIFF_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-          else
-            if git rev-parse HEAD~1 >/dev/null 2>&1; then
-              DIFF_FILES=$(git diff --name-only HEAD~1)
+
+            if echo "$DIFF_FILES" | grep -q "^dev-environment/"; then
+              ENV_NAME="dev"
+            elif echo "$DIFF_FILES" | grep -q "^stage-environment/"; then
+              ENV_NAME="stage"
+            elif echo "$DIFF_FILES" | grep -q "^prod-environment/"; then
+              ENV_NAME="prod"
             else
-              DIFF_FILES=$(git ls-files) # very first commit case
+              ENV_NAME=""
             fi
-          fi
-
-          echo "Changed files:"
-          echo "$DIFF_FILES"
-
-          if echo "$DIFF_FILES" | grep -q "^dev-environment/"; then
-            ENV_NAME="dev"
-          elif echo "$DIFF_FILES" | grep -q "^stage-environment/"; then
-            ENV_NAME="stage"
-          elif echo "$DIFF_FILES" | grep -q "^prod-environment/"; then
-            ENV_NAME="prod"
-          else
-            echo "No environment folder changes detected. Exiting."
-            exit 0
           fi
 
           echo "env_name=$ENV_NAME" >> $GITHUB_OUTPUT
           echo "env_folder=${ENV_NAME}-environment" >> $GITHUB_OUTPUT
 
-      # 3️⃣ Configure AWS Credentials
+      # 3️⃣ Validate Environment
+      - name: Validate Environment
+        run: |
+          if [ -z "${{ steps.detect.outputs.env_folder }}" ]; then
+            echo "❌ ERROR: No environment folder detected. Exiting."
+            exit 1
+          else
+            echo "✅ Environment: ${{ steps.detect.outputs.env_name }}"
+            echo "✅ Environment folder: ${{ steps.detect.outputs.env_folder }}"
+          fi
+
+      # 4️⃣ Configure AWS Credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -83,24 +76,24 @@ jobs:
           aws-secret-access-key: ${{ secrets.SECRETE_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # 4️⃣ Setup Terraform
+      # 5️⃣ Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.7.5
 
-      # 5️⃣ Terraform Init
+      # 6️⃣ Terraform Init
       - name: Terraform Init
-        run: terraform -chdir=${{ steps.detect.outputs.env_folder }} init
+        run: terraform -chdir="${{ steps.detect.outputs.env_folder }}" init
 
-      # 6️⃣ Terraform Validate
+      # 7️⃣ Terraform Validate
       - name: Terraform Validate
-        run: terraform -chdir=${{ steps.detect.outputs.env_folder }} validate
+        run: terraform -chdir="${{ steps.detect.outputs.env_folder }}" validate
 
-      # 7️⃣ Terraform Plan
+      # 8️⃣ Terraform Plan
       - name: Terraform Plan
-        run: terraform -chdir=${{ steps.detect.outputs.env_folder }} plan
+        run: terraform -chdir="${{ steps.detect.outputs.env_folder }}" plan
 
-      # 8️⃣ Terraform Apply
+      # 9️⃣ Terraform Apply
       - name: Terraform Apply
-        run: terraform -chdir=${{ steps.detect.outputs.env_folder }} apply -auto-approve
+        run: terraform -chdir="${{ steps.detect.outputs.env_folder }}" apply -auto-approve
