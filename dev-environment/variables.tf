@@ -52,3 +52,8 @@ variable "iam_instance_profile_name" {
   description = "The name of the IAM instance profile to attach to EC2 instances"
   type        = string
 }
+
+variable "acm_certificate_arn" {
+  description = "ACM certificate ARN for HTTPS listener"
+  type        = string
+}
