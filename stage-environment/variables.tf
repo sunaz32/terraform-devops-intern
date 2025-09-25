@@ -61,3 +61,8 @@ variable "image_url" {
   description = "Docker image URL for ECS deployment"
   type        = string
 }
+
+variable "acm_certificate_arn" {
+  description = "ACM certificate ARN for HTTPS listener"
+  type        = string
+}
