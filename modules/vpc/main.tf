@@ -78,11 +78,13 @@ resource "aws_route_table_association" "public" {
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.this.id
 
-  route {
-  cidr_block = "0.0.0.0/0"
-  nat_gateway_id = var.enable_nat_gateway ? aws_nat_gateway.this[0].id : null
-}
-
+  dynamic "route" {
+    for_each = var.enable_nat_gateway ? [1] : []
+    content {
+      cidr_block     = "0.0.0.0/0"
+      nat_gateway_id = aws_nat_gateway.this[0].id
+    }
+  }
 
   tags = {
     Name = "${var.app_name}-private-rt"
