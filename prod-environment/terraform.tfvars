@@ -22,3 +22,5 @@ iam_instance_profile_name = "ecsInstanceRole-prod" # ✅ Create this if not alre
 # ECR / Docker Image for Prod
 image_url = ""
 
+acm_certificate_arn ="arn:aws:acm:ap-south-1:582176670119:certificate/d105dff3-bf20-4ce4-ba7a-8b1c3774cea6"
+

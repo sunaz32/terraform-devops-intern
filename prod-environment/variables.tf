@@ -62,7 +62,10 @@ variable "image_url" {
   type        = string
 }
 
-
+variable "acm_certificate_arn" {
+  description = "ACM certificate ARN for HTTPS listener"
+  type        = string
+}
 
 
 
