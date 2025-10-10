@@ -9,3 +9,4 @@ app_port             = 5000
 image_url            = ""
 alb_domain           = "dev.naziya.learn.cloudshastrainfotech.com"
 iam_instance_profile_name = "ecsInstanceRole"
+ acm_certificate_arn ="arn:aws:acm:ap-south-1:582176670119:certificate/d105dff3-bf20-4ce4-ba7a-8b1c3774cea6"
