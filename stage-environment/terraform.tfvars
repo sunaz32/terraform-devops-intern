@@ -11,7 +11,7 @@ alb_domain = "stage.naziya.learn.cloudshastrainfotech.com"
 
 # Bastion Host (Stage)t2.small
 bastion_key_name      = "Bastion-key"
-bastion_instance_type = "t2.micro"
+bastion_instance_type = "t3.micro"
 bastion_ami_id        = "" 
 
 # ECS EC2 Configuration
